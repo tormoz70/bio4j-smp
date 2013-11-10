@@ -11,6 +11,8 @@
 
 # IntelliJ
 *.iml
+*.iws
+*.ipr
 
 # paths
 .metadata/
