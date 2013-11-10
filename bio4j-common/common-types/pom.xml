@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>bio4j</groupId>
+		<artifactId>common</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>bio4j-common-types</artifactId>
+	<packaging>bundle</packaging>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+	                <instructions>
+						<Import-Package>!org.apache.commons.logging,*</Import-Package>                
+	                    <Embed-Dependency>commons-beanutils-core</Embed-Dependency>
+                        <Export-Package>bio4j.common.types</Export-Package>
+	                </instructions>
+            	</configuration>
+	        </plugin>
+        </plugins>
+    </build>
+	<dependencies>
+	    <dependency>
+		    <groupId>commons-beanutils</groupId>
+		    <artifactId>commons-beanutils-core</artifactId>
+		    <scope>compile</scope>
+		</dependency>
+	    <dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>${project.groupId}-common-utils</artifactId>
+		</dependency>
+	</dependencies>
+</project>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>bio4j</groupId>
+		<artifactId>server</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>bio4j-server-service-srvc</artifactId>
+	<description><![CDATA[
+    	Данный сервис реализует доступность к серверу BioSrv по протоколу Bio на базе Http
+    ]]></description>
+	<packaging>war</packaging>
+	<build>
+		<plugins>
+			<plugin> <!-- Need to use this plugin to build war files -->
+				<artifactId>maven-war-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-Activator>bio4j.server.service.srvc.Activator</Bundle-Activator>
+                        <Web-ContextPath>/bio</Web-ContextPath>
+                    </instructions>
+                </configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.servlet</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi_R4_core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi_R4_compendium</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<type>bundle</type>
+		</dependency>
+		
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>${project.groupId}-server-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>${project.groupId}-server-common</artifactId>
+		</dependency>
+	</dependencies>
+</project>

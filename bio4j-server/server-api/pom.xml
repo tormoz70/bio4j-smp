@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0">
+	<modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>bio4j</groupId>
+        <artifactId>server</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>bio4j-server-api</artifactId>
+    <description><![CDATA[
+    	Описание интерфесов, с помощью которых модули могут взаимодействовать между собой
+    		UserAuthService 	- Интерфейс службы аутентификации
+    		DatabaseProvider 	- Интерфейс службы, которая предоставляет API для доступа к БД 
+    ]]></description>
+    <packaging>bundle</packaging>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Export-Package>bio4j.server.api;bio4j.server.api.*</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+	<dependencies>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi_R4_core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.servlet</artifactId>
+		</dependency>
+	    <dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>${project.groupId}-server-model</artifactId>
+		</dependency>
+	</dependencies>
+</project>

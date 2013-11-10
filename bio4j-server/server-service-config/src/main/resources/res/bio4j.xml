@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<app_title>E-Kinobilet</app_title>
+	<db_connection><![CDATA[Password=j12;Persist Security Info=True;Connection Lifetime=10;Max Pool Size=15;User ID=GIVCADMIN;Data Source=GIVCDB_EKBS02]]></db_connection>
+	<workspace_path><![CDATA[..\]]></workspace_path>
+	<debug>true</debug>
+</config>

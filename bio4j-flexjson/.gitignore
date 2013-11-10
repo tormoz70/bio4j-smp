@@ -1,0 +1,20 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# eclipse files
+.classpath
+.project
+
+# IntelliJ
+*.iml
+
+# paths
+.metadata/
+.settings/
+.idea/
+target/
+test-output/
