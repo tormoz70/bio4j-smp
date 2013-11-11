@@ -20,7 +20,12 @@ public class BioServiceActivatorBase<T extends BioService> implements BundleActi
 		this.serviceClass = (Class<? extends BioServiceBase>)((ParameterizedType)this.getClass().
 			       getGenericSuperclass()).getActualTypeArguments()[0];
 		LOG = LoggerFactory.getLogger(this.getClass());
-		BioServiceBase newService = this.serviceClass.newInstance();
+        BioServiceBase newService;
+        try {
+		    newService = this.serviceClass.newInstance();
+        } catch (Exception ex) {
+            throw new Exception("При создании сервиса \""+this.serviceClass.getName()+"\" произошла непредвиденная ошибка. Сообщение: " + ex.getMessage());
+        }
 		newService.setBundleContext(context);
 		Class<?>[] intfs = newService.getClass().getInterfaces();
 		for (Class<?> intf : intfs) 

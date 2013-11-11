@@ -9,15 +9,17 @@ import org.osgi.framework.BundleContext;
 import bio4j.server.api.BioEnvironment;
 import bio4j.server.api.Delegate;
 import bio4j.server.api.services.BioService;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class BioServiceBase implements BioService {
+    protected static Logger LOG = LoggerFactory.getLogger(BioServiceBase.class);
 
 	private BioEnvironment environment;
 	private BundleContext bundleContext;
 	private String serviceName;
-	
+
 	public void setBundleContext(BundleContext bundleContext) {
 		this.bundleContext = bundleContext;
 	}

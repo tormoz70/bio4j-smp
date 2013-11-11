@@ -54,5 +54,10 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>${project.groupId}-server-model</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.groupId}-common-utils</artifactId>
+            <scope>provided</scope>
+        </dependency>
 	</dependencies>
 </project>

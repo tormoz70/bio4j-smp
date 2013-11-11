@@ -134,13 +134,33 @@ public class Utl {
 			return (T)obj;
 		return null;
 	}
-	
+
+    /**
+     * Checks two classes is assignable
+     * @param clazz1
+     * @param clazz2
+     * @return boolean
+     * @throws
+     */
 	public static boolean typesIsEquals(Class<?> clazz1, Class<?> clazz2) {
 		if((clazz1 == null) && (clazz2 == null)) return true;
 		if(((clazz1 != null) && (clazz2 == null)) || ((clazz1 == null) && (clazz2 != null))) return false;
 		return (clazz1 == clazz2) || clazz1.isAssignableFrom(clazz2) || clazz2.isAssignableFrom(clazz1);
 	}
-	
+
+    /**
+     * Checks two classes is the same
+     * @param clazz1
+     * @param clazz2
+     * @return boolean
+     * @throws
+     */
+    public static boolean typesIsSame(Class<?> clazz1, Class<?> clazz2) {
+        if((clazz1 == null) || (clazz2 == null)) return true;
+        if(((clazz1 != null) && (clazz2 == null)) || ((clazz1 == null) && (clazz2 != null))) return false;
+        return clazz1.getName().equals(clazz2.getName());
+    }
+
 	/**
 	 * @param annotationType - Type of annotation to find
 	 * @param clazz - Annotated type

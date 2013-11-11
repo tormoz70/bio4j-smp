@@ -7,9 +7,10 @@ import bio4j.server.common.BioServiceBase;
 import bio4j.server.api.helpers.BioHandlerMapper;
 import bio4j.server.api.helpers.RegisterHandlerDelegate;
 import bio4j.server.model.BioConfig;
+import org.slf4j.LoggerFactory;
 
 public class BioHandlerProviderServiceBase extends BioServiceBase {
-	private static Logger LOG;
+    protected static Logger LOG = LoggerFactory.getLogger(BioHandlerProviderServiceBase.class);
 	private BioConfig config;
 
 	public void registerHandler(String mapping, Class<?> handlerType) {
@@ -21,6 +22,8 @@ public class BioHandlerProviderServiceBase extends BioServiceBase {
 	
 	@Override
 	protected void doOnInit() {
+        if(this.helper == null)
+            LOG.error("Reference \"this.helper\" not injected!");
 		this.helper.doScanServicePackage(this.getClass(), this.getBundleContext().getBundle(), new RegisterHandlerDelegate() {
 			@Override
 			public void action(String handlerName, Class<?> handlerType) {
