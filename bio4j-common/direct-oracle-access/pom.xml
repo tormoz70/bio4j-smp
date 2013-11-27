@@ -21,10 +21,20 @@
 	        </plugin>
         </plugins>
     </build>
+    <properties>
+        <ojdbc6.version>12.1.0</ojdbc6.version>
+        <oucp.version>12.1.0</oucp.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
+            <version>${ojdbc6.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>oucp</artifactId>
+            <version>${oucp.version}</version>
         </dependency>
     	<dependency>
             <groupId>${project.groupId}</groupId>

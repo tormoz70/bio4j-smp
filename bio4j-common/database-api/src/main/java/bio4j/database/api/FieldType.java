@@ -14,7 +14,7 @@ public enum FieldType {
 	DATE("date", Date.class, new Class<?>[] { Date.class, Calendar.class }),
 	CLOB("clob", String.class, null),
 	BLOB("blob", Byte[].class, null),
-	OBJECT("object", Object.class, null),
+	//OBJECT("object", Object.class, null),
     UNKNOWN("unknown", Object.class, null);
 	
 	private final String name;

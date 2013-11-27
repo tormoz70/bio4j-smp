@@ -1,6 +1,6 @@
 package bio4j.database.direct.oracle.access;
 
-public class sqlUtils {
+public class SQLUtils {
 	public class PackageName {
 		public String pkgName;
 		public String objName;

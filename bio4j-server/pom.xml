@@ -58,9 +58,9 @@
 							<manifestFile>
 								${project.build.outputDirectory}/META-INF/MANIFEST.MF
 							</manifestFile>
-							<!-- For some reason, adding Bundle-ClassPath in maven-bundle-plugin 
-								confuses that plugin and it generates wrong Import-Package, etc. So, we generate 
-								it here. -->
+							<!-- For some reason, adding Bundle-ClassPath in maven-bundle-plugin
+								confuses that plugin and it generates wrong Import-Package, etc. So, we generate
+								it here.-->
 							<manifestEntries>
 								<Bundle-ClassPath>WEB-INF/classes/</Bundle-ClassPath>
 							</manifestEntries>

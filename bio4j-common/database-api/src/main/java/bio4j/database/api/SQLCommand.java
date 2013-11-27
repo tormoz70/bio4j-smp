@@ -8,16 +8,16 @@ import java.util.Map;
 
 import bio4j.common.types.Params;
 
-public interface SQLCmd {
+public interface SQLCommand {
 	Boolean init(Connection conn, String sql, Params prms, Long timeout);
 
-	Boolean open();
+	Boolean openCursor(Params params);
 
 	Params getParams();
 
-	void cancel();
+    Boolean cancel();
 
-	void close();
+    Boolean closeCursor();
 
 	Boolean next();
 
@@ -38,4 +38,11 @@ public interface SQLCmd {
 	Long getRowPos();
 
 	SQLException getLastError();
+
+    Boolean execSQL(Params params);
+
+    void addBeforeEvent(SQLCommandBeforeEvent e);
+    void addAfterEvent(SQLCommandAfterEvent e);
+    void clearBeforeEvents();
+    void clearAfterEvents();
 }
