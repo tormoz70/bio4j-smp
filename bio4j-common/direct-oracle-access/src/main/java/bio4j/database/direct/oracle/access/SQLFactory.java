@@ -7,8 +7,8 @@ public class SQLFactory {
 		return new SQLCommandImpl();
 	}
 
-    public static SQLConnectionPool CreateSQLConnectionPool(SQLConnectionPoolConfig config) {
-        return new SQLConnectionPoolImpl(config);
+    public static SQLConnectionPool CreateSQLConnectionPool(String poolName, SQLConnectionPoolConfig config) {
+        return SQLConnectionPoolImpl.create(poolName, config);
     }
 
 

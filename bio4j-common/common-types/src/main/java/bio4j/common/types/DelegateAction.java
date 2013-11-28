@@ -1,5 +1,5 @@
 package bio4j.common.types;
 
 public interface DelegateAction {
-	void callback();
+    public abstract void callback();
 }

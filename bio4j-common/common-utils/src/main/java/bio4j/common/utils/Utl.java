@@ -208,7 +208,7 @@ public class Utl {
 	
 	/**
 	 * @param context
-	 * @param packageName
+	 * @param context
 	 * @return
 	 */
 	public static List<Class<?>> findClassesOfBandle(BundleContext context) {
@@ -239,6 +239,26 @@ public class Utl {
 			logger.debug("getEntryPaths returns no entry!");
 		return lst;
 	}
-	
+
+    public static String buildBeanStateInfo(Object bean, String beanName, String tab) {
+        if(tab == null) tab = "";
+        final String attrFmt = tab + " - %s : %s;\n";
+        StringBuilder out = new StringBuilder();
+        Class<?> type = bean.getClass();
+        String bnName = StringUtl.isNullOrEmpty(beanName) ? type.getName() : beanName;
+        out.append(String.format(tab + "%s {\n", bnName));
+        for(java.lang.reflect.Field fld : type.getDeclaredFields()) {
+            Object val;
+            try {
+                fld.setAccessible(true);
+                val = fld.get(bean);
+            } catch (IllegalAccessException ex) {
+                val = ex.toString();
+            }
+            out.append(String.format(attrFmt, fld.getName(), val));
+        }
+        out.append(tab + "}");
+        return out.toString();
+    }
 }
 

@@ -9,7 +9,8 @@ import java.util.Map;
 import bio4j.common.types.Params;
 
 public interface SQLCommand {
-	Boolean init(Connection conn, String sql, Params prms, Long timeout);
+	Boolean init(Connection conn, String sql, Params prms, int timeout);
+    Boolean init(Connection conn, String sql, Params prms);
 
 	Boolean openCursor(Params params);
 

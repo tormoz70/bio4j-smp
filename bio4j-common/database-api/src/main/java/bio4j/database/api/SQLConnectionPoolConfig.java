@@ -1,5 +1,9 @@
 package bio4j.database.api;
 
+import org.slf4j.Logger;
+
+import java.lang.reflect.*;
+
 /**
  * Created with IntelliJ IDEA.
  * User: ayrat

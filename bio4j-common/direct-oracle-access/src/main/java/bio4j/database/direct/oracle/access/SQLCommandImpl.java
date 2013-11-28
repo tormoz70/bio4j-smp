@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import bio4j.common.types.DelegateSQLAction;
 import bio4j.common.types.Params;
 import bio4j.database.api.*;
 import oracle.jdbc.OracleConnection;
@@ -23,7 +24,7 @@ public class SQLCommandImpl implements SQLCommand {
 	private final Integer ciORAERRCODE_USER_BREAKED = 1013; // {"ORA-01013: пользователем запрошена отмена текущей операции"}
     private final Integer ciFetchedRowLimit = 10000000; // Максимальное кол-во записей, которое может вернуть запрос к БД
 	private Params params = null;
-	private Long timeout = 60000L;
+	private int timeout = 60;
 	private Boolean _isActive;
 	private OracleResultSet resultSet = null;
 	private OracleConnection connection = null;
@@ -58,7 +59,7 @@ public class SQLCommandImpl implements SQLCommand {
 	}
 
 	@Override
-	public Boolean init(Connection conn, String sql, Params params, Long timeout) {
+	public Boolean init(Connection conn, String sql, Params params, int timeout) {
 		Boolean result = true;
 		this.connection = (OracleConnection)conn;
 		this.lastError = null;
@@ -67,11 +68,16 @@ public class SQLCommandImpl implements SQLCommand {
 		this.params = params;
 		return this.prepareStatment();
 	}
+    @Override
+    public Boolean init(Connection conn, String sql, Params params) {
+        return this.init(conn, sql, params, 60);
+    }
 
 	private Boolean prepareStatment() {
         this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.sql) : this.sql;
         try {
 		    this.preparedStatement = (OraclePreparedStatement)this.connection.prepareStatement(this.preparedSQL, ResultSet.TYPE_FORWARD_ONLY);
+            this.preparedStatement.setQueryTimeout(this.timeout);
             return true;
         } catch (SQLException ex) {
             this.lastError = ex;
@@ -108,91 +114,84 @@ public class SQLCommandImpl implements SQLCommand {
         this.currentFetchedRowPosition = 0L;
     }
 
-	@Override
-	public Boolean openCursor(Params params) {
+    private static void setParamsToStatment(OraclePreparedStatement statement, Params params) {
+
+    }
+
+    private static void getBackOutParams(OraclePreparedStatement statement, Params params) {
+        //statement.getParameterMetaData().
+        //for ()
+    }
+
+    private <T> T processStatement(Params params, DelegateSQLAction<T> exec) {
+        T scalarResult = null;
         try {
             try {
-                this.resetCommand();
+                this.resetCommand(); // Сбрасываем состояние
 
-                this.params = this.params.merge(params, true);
+                this.params = this.params.merge(params, true); // Объединяем параметры
 
-                if(!this.doBeforeStatment(this.params))
-                    return false;
+                if(!this.doBeforeStatment(this.params)) // Обрабатываем события
+                    return scalarResult;
 
-                this.setParamsToStatment(this.params);
-                this.resultSet = (OracleResultSet)this.getStatement().executeQuery(this.getPreparedSQL());
-                this._isActive = true;
+                setParamsToStatment(this.preparedStatement, this.params); // Применяем параметры
+
+                if (exec != null)
+                    scalarResult = exec.execute(); // Выполняем команду
+
+                getBackOutParams(this.preparedStatement, this.params); // Вытаскиваем OUT-параметры
+
             } catch (SQLException e) {
                 this.lastError = e;
             }
-            this.doAfterStatment(SQLCommandAfterEventAttrs.build(
-                this.params, this.resultSet, this.lastError
+            this.doAfterStatment(SQLCommandAfterEventAttrs.build ( // Обрабатываем события
+                    this.params, this.resultSet, this.lastError
             ));
         } finally {
-            return (this.lastError == null);
+            return scalarResult; // Возвращаем результат
         }
+    }
+
+
+	@Override
+	public Boolean openCursor(Params params) {
+        return this.processStatement(params, new DelegateSQLAction<Boolean>() {
+            @Override
+            public Boolean execute() throws SQLException {
+                final SQLCommandImpl self = SQLCommandImpl.this;
+                self.resultSet = (OracleResultSet)self.preparedStatement.executeQuery(self.getPreparedSQL());
+                self._isActive = true;
+                return true;
+            }
+        });
 	}
 
     @Override
 	public Boolean execSQL(Params params) {
-        try {
-            try {
-                this.resetCommand();
-
-                this.params = this.params.merge(params, true);
-
-                if(!this.doBeforeStatment(this.params))
-                    return false;
-
-                this.getStatement().execute(this.getPreparedSQL());
-                this.getStatement().close();
-            } catch (SQLException e) {
-                this.lastError = e;
+        return this.processStatement(params, new DelegateSQLAction<Boolean>() {
+            @Override
+            public Boolean execute() throws SQLException {
+                final SQLCommandImpl self = SQLCommandImpl.this;
+                self.preparedStatement.execute(self.getPreparedSQL());
+                return true;
             }
-            this.doAfterStatment(SQLCommandAfterEventAttrs.build(
-                    this.params, this.lastError
-            ));
-        } finally {
-            return (this.lastError == null);
-        }
+        });
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T execScalar(Class<T> clazz, Params params){
-        T result = null;
-        try {
-            try {
-                this.resetCommand();
-
-                this.params = this.params.merge(params, true);
-
-                if(!this.doBeforeStatment(this.params))
-                    return null;
-
-                try {
-                    try(OracleResultSet resultSet = (OracleResultSet)this.getStatement().executeQuery(this.getPreparedSQL());) {
-                        if(resultSet.next())
-                            result = (T)resultSet.getObject(1);
-                    }
-                }finally {
-                    this.getStatement().close();
+        return this.processStatement(params, new DelegateSQLAction<T>() {
+            @Override
+            public T execute() throws SQLException {
+                final SQLCommandImpl self = SQLCommandImpl.this;
+                try(OracleResultSet resultSet = (OracleResultSet)self.preparedStatement.executeQuery(self.getPreparedSQL());) {
+                    if(resultSet.next())
+                        return (T)resultSet.getObject(1);
                 }
-            } catch (SQLException e) {
-                this.lastError = e;
+                return null;
             }
-            this.doAfterStatment(SQLCommandAfterEventAttrs.build(
-                    this.params, this.lastError
-            ));
-        } finally {
-            return result;
-        }
+        });
 	}
-	
-	private void setParamsToStatment(Params params) {
-		
-	}
-
-	
 	
 	@Override
 	public Boolean cancel() {

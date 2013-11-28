@@ -65,19 +65,19 @@ public class Params extends ArrayList<Param> {
 			return null;
 	}
 
-//	public synchronized Param removeParam(Param param) {
+//	public Param removeParam(Param param) {
 //		if (param.getOwner() == this)
 //			param.remove();
 //		return param;
 //	}
 
-	public synchronized Param remove(String name) {
+	public Param remove(String name) {
 		Param rslt = this.getParam(name);
 		this.remove(rslt);
 		return rslt;
 	}
 
-	private synchronized Boolean alredyExists(String name, Boolean replaceIfExists) {
+	private Boolean alredyExists(String name, Boolean replaceIfExists) {
 		Boolean result = false;
 		Param exists = this.getParam(name);
 		if (exists != null) {
@@ -90,34 +90,33 @@ public class Params extends ArrayList<Param> {
 		return result;
 	}
 
-	public synchronized Param add(Param item, Boolean replaceIfExists) {
+	public Params add(Param item, Boolean replaceIfExists) {
 		if (item != null) {
 			if (!this.alredyExists(item.getName(), replaceIfExists))
 				super.add(item);
 		}
-		return item;
+		return this;
 	}
 
-	public synchronized Param add(String name, Object value, Boolean replaceIfExists) {
+	public Params add(String name, Object value, Boolean replaceIfExists) {
 		if (!StringUtl.isNullOrEmpty(name)) {
 			if (!this.alredyExists(name, replaceIfExists)) {
 				Param rslt = new ParamBuilder(name).setOwner(this).setValue(value).build();
 				super.add(rslt);
-				return rslt;
 			}
 		}
-		return null;
+		return this;
 	}
 
-	public synchronized Param add(String name, Object value) {
+	public Params add(String name, Object value) {
 		return this.add(name, value, false);
 	}
 
-	public synchronized Param add(String name, Object value, Object innerObject) {
-		return new ParamBuilder(name).setValue(value).setInnerObject(innerObject).build();
+	public Params add(String name, Object value, Object innerObject) {
+		return this.add(new ParamBuilder(name).setValue(value).setInnerObject(innerObject).build(), false);
 	}
 
-	public synchronized Params merge(Params params, Boolean overwrite) {
+	public Params merge(Params params, Boolean overwrite) {
 		if ((params != null) && (params != this)) {
 			for (Param pp : params)
 				this.add(pp.export(this), overwrite);
@@ -197,26 +196,26 @@ public class Params extends ArrayList<Param> {
 		return this.getParam(name, ignoreCase) != null;
 	}
 
-	public synchronized Params addList(String names, Object[] values, String delimiter) {
+	public Params addList(String names, Object[] values, String delimiter) {
 		String[] paramNames = StringUtl.split(names, delimiter);
 		for (int i = 0; i < paramNames.length; i++)
 			this.add(paramNames[i], (i < values.length) ? values[i] : null);
 		return this;
 	}
 
-	public synchronized Params addList(String names, Object[] values) {
+	public Params addList(String names, Object[] values) {
 		return this.addList(names, values, csDefaultDelimiter);
 	}
 
-	public synchronized Params addList(String names, String values, String delimiter) {
+	public Params addList(String names, String values, String delimiter) {
 		return this.addList(names, StringUtl.split(values, delimiter), delimiter);
 	}
 
-	public synchronized Params addList(String names, String values) {
+	public Params addList(String names, String values) {
 		return addList(names, values, csDefaultDelimiter);
 	}
 
-	public synchronized Params setList(String names, Object[] values, String delimiter) {
+	public Params setList(String names, Object[] values, String delimiter) {
 		String[] strs = StringUtl.split(names, delimiter);
 		for (int i = 0; i < strs.length; i++)
 			if (i < values.length)
@@ -224,22 +223,22 @@ public class Params extends ArrayList<Param> {
 		return this;
 	}
 
-	public synchronized Params setList(String names, String values, String delimiter) {
+	public Params setList(String names, String values, String delimiter) {
 		return setList(names, StringUtl.split(values, delimiter), delimiter);
 	}
 
-	public synchronized Params setList(String names, String values) {
+	public Params setList(String names, String values) {
 		return setList(names, values, csDefaultDelimiter);
 	}
 
-	public synchronized Params removeList(String names, String delimiter) {
+	public Params removeList(String names, String delimiter) {
 		String[] strs = StringUtl.split(names, delimiter);
 		for (int i = 0; i < strs.length; i++)
 			this.remove(strs[i]);
 		return this;
 	}
 
-	public synchronized Params removeList(String names) {
+	public Params removeList(String names) {
 		return removeList(names, csDefaultDelimiter);
 	}
 

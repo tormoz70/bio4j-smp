@@ -57,6 +57,7 @@
 		<testng_version>6.7</testng_version>
 		<osgi_R4_version>1.0</osgi_R4_version>
 		<javax_servlet_version>3.0-Preview</javax_servlet_version>
+        <log4j_version>1.2.17</log4j_version>
 		<slf4j_version>1.7.5</slf4j_version>
 	</properties>
 	<dependencyManagement>
@@ -116,5 +117,17 @@
 			<version>${slf4j_version}</version>
 			<scope>provided</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j_version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j_version}</version>
+            <scope>provided</scope>
+        </dependency>
 	</dependencies>
 </project>
