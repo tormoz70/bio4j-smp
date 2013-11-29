@@ -20,7 +20,7 @@ public class Params extends ArrayList<Param> {
 		Param result = this.process(new DelegateCheck<Param>() {
 			@Override
 			public boolean callback(Param param) {
-				return StringUtl.compareStrings(param.getName(), name, ignoreCase);
+				return StringUtl.compare(param.getName(), name, ignoreCase);
 			}
 		}).first();
 		
@@ -34,14 +34,14 @@ public class Params extends ArrayList<Param> {
 	public String getNamesList() {
 		String rslt = null;
 		for (Param param : this)
-			rslt = StringUtl.appendStr(rslt, "\"" + param.getName() + "\"", ",");
+			rslt = StringUtl.append(rslt, "\"" + param.getName() + "\"", ",");
 		return rslt;
 	}
 
 	public String getValsList() {
 		String rslt = null;
 		for (Param param : this)
-			rslt = StringUtl.appendStr(rslt, "\"" + param.getValueAsString() + "\"", ",");
+			rslt = StringUtl.append(rslt, "\"" + param.getValueAsString() + "\"", ",");
 		return rslt;
 	}
 
@@ -167,7 +167,7 @@ public class Params extends ArrayList<Param> {
 				paramStr = prm.getName() + "=" + URLEncoder.encode(prm.getValueAsString(), "UTF-8");
 			} catch (UnsupportedEncodingException e) {
 			}
-			rslt = StringUtl.appendStr(rslt, paramStr, "&");
+			rslt = StringUtl.append(rslt, paramStr, "&");
 		}
 		return rslt;
 	}

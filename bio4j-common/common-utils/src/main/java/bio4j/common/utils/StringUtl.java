@@ -26,7 +26,7 @@ public class StringUtl {
 	 * @param delimiter - разделитель, через который надо добавить str к line  
 	 * @return результирующий текст
 	 */
-	public static String appendStr(String line, String str, String delimiter) {
+	public static String append(String line, String str, String delimiter) {
 		if (isNullOrEmpty(line))
 			line = ((str == null) ? "" : str);
 		else
@@ -86,7 +86,7 @@ public class StringUtl {
 	 * @param ignoreCase - игнорировать регистр 
 	 * @return если равны, тогда true
 	 */
-	public static boolean compareStrings(String str1, String str2, Boolean ignoreCase) {
+	public static boolean compare(String str1, String str2, Boolean ignoreCase) {
 		if ((str1 == null) && (str2 == null))
 			return true;
 		else if ((str1 == null) || (str2 == null))

@@ -3,33 +3,31 @@ package bio4j.common.utils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import bio4j.common.utils.StringUtl;
-
 public class StringUtlTest {
 
 	@Test
 	public void appendStr() {
 		String line = null;
-		line = StringUtl.appendStr(line, "qwe1", "|");
+		line = StringUtl.append(line, "qwe1", "|");
 		Assert.assertEquals(line, "qwe1");
-		line = StringUtl.appendStr(line, "qwe2", "|");
+		line = StringUtl.append(line, "qwe2", "|");
 		Assert.assertEquals(line, "qwe1|qwe2");
-		line = StringUtl.appendStr(line, "", "|");
+		line = StringUtl.append(line, "", "|");
 		Assert.assertEquals(line, "qwe1|qwe2|");
-		line = StringUtl.appendStr(line, null, "|");
+		line = StringUtl.append(line, null, "|");
 		Assert.assertEquals(line, "qwe1|qwe2||");
-		line = StringUtl.appendStr(line, "asd", "|");
+		line = StringUtl.append(line, "asd", "|");
 		Assert.assertEquals(line, "qwe1|qwe2|||asd");
 	}
 
 	@Test
 	public void compareStrings() {
-		Assert.assertEquals(StringUtl.compareStrings(null, null, false), true);
-		Assert.assertEquals(StringUtl.compareStrings("", null, false), false);
-		Assert.assertEquals(StringUtl.compareStrings(null, "", false), false);
-		Assert.assertEquals(StringUtl.compareStrings("asd", "asd", false), true);
-		Assert.assertEquals(StringUtl.compareStrings("asd", "ASD", false), false);
-		Assert.assertEquals(StringUtl.compareStrings("asd", "ASD", true), true);
+		Assert.assertEquals(StringUtl.compare(null, null, false), true);
+		Assert.assertEquals(StringUtl.compare("", null, false), false);
+		Assert.assertEquals(StringUtl.compare(null, "", false), false);
+		Assert.assertEquals(StringUtl.compare("asd", "asd", false), true);
+		Assert.assertEquals(StringUtl.compare("asd", "ASD", false), false);
+		Assert.assertEquals(StringUtl.compare("asd", "ASD", true), true);
 	}
 
 	@Test

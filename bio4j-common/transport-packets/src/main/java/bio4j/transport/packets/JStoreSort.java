@@ -11,7 +11,7 @@ public class JStoreSort extends HashMap<String, JStoreSortOrder> {
     public String getSQL() {
         String rslt = null;
         for (String key : this.keySet()) {
-        	rslt = StringUtl.appendStr(rslt, String.format("%s %s", key, this.get(key).getValue()), ",");
+        	rslt = StringUtl.append(rslt, String.format("%s %s", key, this.get(key).getValue()), ",");
         }
         return rslt;
       }

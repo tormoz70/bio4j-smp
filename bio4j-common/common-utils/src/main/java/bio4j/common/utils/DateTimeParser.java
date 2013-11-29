@@ -54,7 +54,7 @@ public class DateTimeParser {
 	public String detectFormat(String datetimeValue) {
 
 		for (DateTimeParserTemplate f : this.templates) {
-			if (RegexUtl.Match(datetimeValue, f.getRegex(), true))
+			if (RegexUtl.match(datetimeValue, f.getRegex(), true).matches())
 				return f.getFormat();
 		}
 		return null;

@@ -1,9 +1,6 @@
 package bio4j.database.direct.oracle.access;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,12 +14,15 @@ import oracle.jdbc.OracleResultSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SQLCommandImpl implements SQLCommand {
-    private static final Logger LOG = LoggerFactory.getLogger(SQLCommandImpl.class);
+/**
+ * Реализует 3 основных вида запроса Query, Exec, Scalar
+ */
+public class OraCommandImpl implements SQLCommand {
+    private static final Logger LOG = LoggerFactory.getLogger(OraCommandImpl.class);
 
 	private final Integer ciORAERRCODE_APP_ERR_START = 20000; // начало диапазона кодов ошибок приложения в Oracle
 	private final Integer ciORAERRCODE_USER_BREAKED = 1013; // {"ORA-01013: пользователем запрошена отмена текущей операции"}
-    private final Integer ciFetchedRowLimit = 10000000; // Максимальное кол-во записей, которое может вернуть запрос к БД
+    private final Integer ciFetchedRowLimit = 10*10^6; // Максимальное кол-во записей, которое может вернуть запрос к БД (10 млн)
 	private Params params = null;
 	private int timeout = 60;
 	private Boolean _isActive;
@@ -31,7 +31,9 @@ public class SQLCommandImpl implements SQLCommand {
 	private OraclePreparedStatement preparedStatement = null;
 	private SQLException lastError = null;
 
-    private SQLWrapper sqlWrapper;
+    private OraSQLWrapper sqlWrapper;
+    private OraParamSetter paramSetter;
+    private OraParamGetter paramGetter;
 
 	private String sql = null;
 	private String preparedSQL = null;
@@ -55,7 +57,7 @@ public class SQLCommandImpl implements SQLCommand {
         this.afterEvents.clear();
     }
 
-    public SQLCommandImpl() {
+    public OraCommandImpl() {
 	}
 
 	@Override
@@ -74,8 +76,9 @@ public class SQLCommandImpl implements SQLCommand {
     }
 
 	private Boolean prepareStatment() {
-        this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.sql) : this.sql;
         try {
+            this.preparedSQL = OraUtils.detectSQLParamsAuto(this.sql, this.connection);
+            this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.preparedSQL) : this.preparedSQL;
 		    this.preparedStatement = (OraclePreparedStatement)this.connection.prepareStatement(this.preparedSQL, ResultSet.TYPE_FORWARD_ONLY);
             this.preparedStatement.setQueryTimeout(this.timeout);
             return true;
@@ -114,17 +117,36 @@ public class SQLCommandImpl implements SQLCommand {
         this.currentFetchedRowPosition = 0L;
     }
 
-    private static void setParamsToStatment(OraclePreparedStatement statement, Params params) {
 
+    /**
+     * Присваивает значения входящим параметрам
+     */
+    private void setParamsToStatment() throws SQLException {
+        if(this.paramSetter != null)
+            this.paramSetter.setParamsToStatment(this.preparedSQL, this.preparedStatement, this.params);
     }
 
-    private static void getBackOutParams(OraclePreparedStatement statement, Params params) {
-        //statement.getParameterMetaData().
-        //for ()
+    private void getBackOutParams() throws SQLException {
+        if(this.paramGetter != null)
+            this.paramGetter.getParamsFromStatment(this.preparedStatement, this.params);
     }
 
-    private <T> T processStatement(Params params, DelegateSQLAction<T> exec) {
-        T scalarResult = null;
+    public void setParamSetter(OraParamSetter paramSetter) {
+        this.paramSetter = paramSetter;
+    }
+
+    public void setParamGetter(OraParamGetter paramGetter) {
+        this.paramGetter = paramGetter;
+    }
+
+    private enum StatementType {
+        QUERY,
+        EXEC,
+        SCALAR
+    }
+
+    private <T> Object processStatement(StatementType statementType, Params params, DelegateSQLAction<T> action) {
+        Object result = false;
         try {
             try {
                 this.resetCommand(); // Сбрасываем состояние
@@ -132,14 +154,14 @@ public class SQLCommandImpl implements SQLCommand {
                 this.params = this.params.merge(params, true); // Объединяем параметры
 
                 if(!this.doBeforeStatment(this.params)) // Обрабатываем события
-                    return scalarResult;
+                    return result;
 
-                setParamsToStatment(this.preparedStatement, this.params); // Применяем параметры
+                this.setParamsToStatment(); // Применяем параметры
 
-                if (exec != null)
-                    scalarResult = exec.execute(); // Выполняем команду
+                if (action != null)
+                    result = action.execute(); // Выполняем команду
 
-                getBackOutParams(this.preparedStatement, this.params); // Вытаскиваем OUT-параметры
+                this.getBackOutParams(); // Вытаскиваем OUT-параметры
 
             } catch (SQLException e) {
                 this.lastError = e;
@@ -148,17 +170,17 @@ public class SQLCommandImpl implements SQLCommand {
                     this.params, this.resultSet, this.lastError
             ));
         } finally {
-            return scalarResult; // Возвращаем результат
+            return result; // Возвращаем результат
         }
     }
 
 
 	@Override
 	public Boolean openCursor(Params params) {
-        return this.processStatement(params, new DelegateSQLAction<Boolean>() {
+        return (Boolean)this.processStatement(StatementType.QUERY, params, new DelegateSQLAction<Boolean>() {
             @Override
             public Boolean execute() throws SQLException {
-                final SQLCommandImpl self = SQLCommandImpl.this;
+                final OraCommandImpl self = OraCommandImpl.this;
                 self.resultSet = (OracleResultSet)self.preparedStatement.executeQuery(self.getPreparedSQL());
                 self._isActive = true;
                 return true;
@@ -168,10 +190,10 @@ public class SQLCommandImpl implements SQLCommand {
 
     @Override
 	public Boolean execSQL(Params params) {
-        return this.processStatement(params, new DelegateSQLAction<Boolean>() {
+        return (Boolean)this.processStatement(StatementType.EXEC, params, new DelegateSQLAction<Boolean>() {
             @Override
             public Boolean execute() throws SQLException {
-                final SQLCommandImpl self = SQLCommandImpl.this;
+                final OraCommandImpl self = OraCommandImpl.this;
                 self.preparedStatement.execute(self.getPreparedSQL());
                 return true;
             }
@@ -180,10 +202,10 @@ public class SQLCommandImpl implements SQLCommand {
 
 	@SuppressWarnings("unchecked")
 	public <T> T execScalar(Class<T> clazz, Params params){
-        return this.processStatement(params, new DelegateSQLAction<T>() {
+        return (T)this.processStatement(StatementType.SCALAR, params, new DelegateSQLAction<T>() {
             @Override
             public T execute() throws SQLException {
-                final SQLCommandImpl self = SQLCommandImpl.this;
+                final OraCommandImpl self = OraCommandImpl.this;
                 try(OracleResultSet resultSet = (OracleResultSet)self.preparedStatement.executeQuery(self.getPreparedSQL());) {
                     if(resultSet.next())
                         return (T)resultSet.getObject(1);
@@ -304,7 +326,8 @@ public class SQLCommandImpl implements SQLCommand {
 		return this.lastError;
 	}
 
-    public void setSqlWrapper(SQLWrapper sqlWrapper) {
+    public void setSqlWrapper(OraSQLWrapper sqlWrapper) {
         this.sqlWrapper = sqlWrapper;
     }
+
 }

@@ -17,15 +17,10 @@ public class ParamsTest {
 	@Test(enabled = true)
 	public void add() {
 		Params testParams = new Params();
-		Param newParam = testParams.add("param1", 111);
-		Assert.assertNotNull(newParam);
-		newParam = testParams.add("param1", 111, true);
-		Assert.assertNotNull(newParam);
+		testParams.add("param1", 111).add("param1", 111, true);
 		Assert.assertEquals(111, testParams.getValueByName("param1", false));
-		newParam = testParams.add("param3", 33);
-		Assert.assertNotNull(newParam);
+		testParams.add("param3", 33);
 		Assert.assertNotNull(testParams.getParam("param3"));
-		Assert.assertEquals(newParam, testParams.getParam("param3"));
 		Assert.assertTrue(testParams.paramExists("param3"));
 		Assert.assertFalse(testParams.paramExists("Param3"));
 		Assert.assertTrue(testParams.paramExists("Param3", true));

@@ -71,7 +71,7 @@ public class Param implements Cloneable {
 		String innrObjStr = (this.getInnerObject() == null) ? null : "o:" + this.getInnerObject().toString();
 		String objsStr = null;
 		if (StringUtl.isNullOrEmpty(innrObjStr))
-			objsStr = StringUtl.appendStr(objsStr, innrObjStr, ";");
+			objsStr = StringUtl.append(objsStr, innrObjStr, ";");
 		if (!StringUtl.isNullOrEmpty(objsStr))
 			objsStr = "(" + objsStr + ")";
 		String valStr = this.getValue() + objsStr;
