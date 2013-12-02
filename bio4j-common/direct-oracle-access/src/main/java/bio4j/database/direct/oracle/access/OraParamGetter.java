@@ -16,6 +16,10 @@ import java.util.regex.Matcher;
  * Time: 17:13
  */
 public class OraParamGetter {
+    private OraCommandImpl owner;
+    public OraParamGetter(OraCommandImpl owner) {
+        this.owner = owner;
+    }
 
     public void getParamsFromStatement(OraclePreparedStatement statement, Params params) throws SQLException {
 

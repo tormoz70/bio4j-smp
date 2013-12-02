@@ -18,6 +18,7 @@ import java.sql.SQLException;
 public class SQLFactoryTest {
     private static final Logger LOG = LoggerFactory.getLogger(SQLFactoryTest.class);
     private static final String testDBUrl = "jdbc:oracle:thin:@192.168.50.32:1521:EKBDB";
+    //private static final String testDBUrl = "jdbc:oracle:oci:@GIVCDB_EKBS03";
     private static final String testDBUsr = "GIVCAS";
     private static final String testDBPwd = "qwe";
 
@@ -40,7 +41,7 @@ public class SQLFactoryTest {
         LOG.debug(Utl.buildBeanStateInfo(pool.getStat(), null, null));
     }
 
-    @Test
+    @Test(enabled = true)
     public void testCreateSQLCommand() {
         SQLConnectionPool pool = OraFactory.CreateSQLConnectionPool("TEST-CONN-POOL",
                 new SQLConnectionPoolConfigBuilder()
@@ -52,17 +53,16 @@ public class SQLFactoryTest {
         Connection conn = pool.getConnection();
 
         SQLCommand cmd = OraFactory.CreateSQLCommand();
-        String sql = "select user as curuser, :dummy as dummy_param from dual";
+        String sql = "select user as curuser, :dummy as dm, :dummy1 as dm1 from dual";
         LOG.debug("conn: " + conn);
         cmd.init(conn, sql, new Params().add("dummy", 101));
         cmd.openCursor(null);
         Double dummysum = 0.0;
         while(cmd.next()){
-            try {
-                dummysum += cmd.getResultSet().getDouble("dummy_param");
-            } catch (SQLException ex) {}
+            dummysum += cmd.getRow().get("DM").<Double>getValue();
         }
         LOG.debug("dummysum: "+dummysum);
+        Assert.assertEquals(dummysum, 101.0);
     }
 
 }

@@ -81,12 +81,7 @@
 						
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>${project.groupId}-common-utils</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>${project.groupId}-common-types</artifactId>
+				<artifactId>${project.groupId}-commons</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -98,8 +93,7 @@
 		</dependencies>
 	</dependencyManagement>
 	<modules>
-		<module>common-types</module>
-		<module>common-utils</module>
+		<module>commons</module>
 		<module>database-api</module>
 		<module>direct-oracle-access</module>
         <module>transport-packets</module>

@@ -2,7 +2,6 @@ package bio4j.database.direct.oracle.access;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import bio4j.common.types.DelegateSQLAction;
@@ -25,21 +24,22 @@ public class OraCommandImpl implements SQLCommand {
     private final Integer ciFetchedRowLimit = 10*10^6; // Максимальное кол-во записей, которое может вернуть запрос к БД (10 млн)
 	private Params params = null;
 	private int timeout = 60;
-	private Boolean _isActive;
+	private boolean isActive = false;
 	private OracleResultSet resultSet = null;
 	private OracleConnection connection = null;
 	private OraclePreparedStatement preparedStatement = null;
-	private SQLException lastError = null;
+	private Exception lastError = null;
 
     private OraSQLWrapper sqlWrapper;
     private OraParamSetter paramSetter;
     private OraParamGetter paramGetter;
+    private OraMetaDataReader metaDataReader;
+    private OraDataReader dataReader;
 
 	private String sql = null;
 	private String preparedSQL = null;
-	private HashMap<String, ?> rowValues = null;
-	private Long currentFetchedRowPosition = 0L;
-	private Boolean closeConnectionOnClose = false;
+	private long currentFetchedRowPosition = 0L;
+	private boolean closeConnectionOnClose = false;
 
     private ArrayList<SQLCommandBeforeEvent> beforeEvents = new ArrayList<SQLCommandBeforeEvent>();
     private ArrayList<SQLCommandAfterEvent> afterEvents = new ArrayList<SQLCommandAfterEvent>();
@@ -139,6 +139,14 @@ public class OraCommandImpl implements SQLCommand {
         this.paramGetter = paramGetter;
     }
 
+    public void setMetaDataReader(OraMetaDataReader metaDataReader) {
+        this.metaDataReader = metaDataReader;
+    }
+
+    public void setDataReader(OraDataReader dataReader) {
+        this.dataReader = dataReader;
+    }
+
     private enum StatementType {
         QUERY,
         EXEC,
@@ -165,6 +173,10 @@ public class OraCommandImpl implements SQLCommand {
 
             } catch (SQLException e) {
                 this.lastError = e;
+                LOG.debug("Error on exec sql : [" + this.preparedSQL + "]", e);
+//                for (int i = 1; i <= this.preparedStatement.getParameterMetaData().getParameterCount(); i++) {
+//                    LOG.debug("1: "+this.preparedStatement.getParameterMetaData().getParameterType(i));
+//                }
             }
             this.doAfterStatement(SQLCommandAfterEventAttrs.build( // Обрабатываем события
                     this.params, this.resultSet, this.lastError
@@ -181,8 +193,8 @@ public class OraCommandImpl implements SQLCommand {
             @Override
             public Boolean execute() throws SQLException {
                 final OraCommandImpl self = OraCommandImpl.this;
-                self.resultSet = (OracleResultSet)self.preparedStatement.executeQuery(self.getPreparedSQL());
-                self._isActive = true;
+                self.resultSet = (OracleResultSet)self.preparedStatement.executeQuery();
+                self.isActive = true;
                 return true;
             }
         });
@@ -234,7 +246,7 @@ public class OraCommandImpl implements SQLCommand {
 
 	@Override
 	public Boolean closeCursor() {
-		this._isActive = false;
+		this.isActive = false;
         this.cancel();
         if (this.lastError != null)
             return false;
@@ -258,8 +270,11 @@ public class OraCommandImpl implements SQLCommand {
                 return false;
             }
         }
+        this.row = null;
         return true;
 	}
+
+    private Map<String, Field> row;
 
 	@Override
 	public Boolean next() {
@@ -268,7 +283,14 @@ public class OraCommandImpl implements SQLCommand {
 		if (this.resultSet != null) {
             try {
                 rslt = this.resultSet.next();
-            } catch (SQLException ex) {
+                if(rslt){
+                    if(this.row == null)
+                        this.row = this.metaDataReader.read(this.resultSet);
+                    this.dataReader.read(this.resultSet, this.row);
+                }
+
+            } catch (Exception ex) {
+                LOG.error("Error!!!", ex);
                 this.lastError = ex;
                 rslt = false;
             }
@@ -278,7 +300,7 @@ public class OraCommandImpl implements SQLCommand {
 
 	@Override
 	public Boolean isActive() {
-		return this._isActive;
+		return this.isActive;
 	}
 
 	@Override
@@ -312,8 +334,8 @@ public class OraCommandImpl implements SQLCommand {
 	}
 
 	@Override
-	public Map<String, ?> getRow() {
-		return this.rowValues;
+	public Map<String, Field> getRow() {
+		return this.row;
 	}
 
 	@Override
@@ -322,7 +344,7 @@ public class OraCommandImpl implements SQLCommand {
 	}
 
 	@Override
-	public SQLException getLastError() {
+	public Exception getLastError() {
 		return this.lastError;
 	}
 

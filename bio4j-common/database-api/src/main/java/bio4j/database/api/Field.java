@@ -1,35 +1,26 @@
 package bio4j.database.api;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 public interface Field {
 
 	String getName();
 
-	FieldType getDataType();
+	int getDataType();
 
 	Class<?> getJavaType();
-	
-	Long getId();
+
+	Integer getId();
 	
 	String getCaption();
 
-	String getPkIndex();
-	
+    void setCaption(String value);
+
+	int getPkIndex();
+
+    void setPkIndex(int value);
+
 	Boolean isDBNull();
 	
-	Object getObject();
-	
-	Date getDate();
-	
-	Boolean getBoolean();
-	
-	Long getLong();
-	
-	BigDecimal getBigDecimal();
+	<T> T getValue();
 
-	Double getDouble();
-	
-	String getString();
+    void setValue(Object value);
 }

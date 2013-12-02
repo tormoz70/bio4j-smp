@@ -34,11 +34,11 @@ public interface SQLCommand {
 
 	Statement getStatement();
 
-	Map<String, ?> getRow();
+	Map<String, Field> getRow();
 
 	Long getRowPos();
 
-	SQLException getLastError();
+    Exception getLastError();
 
     Boolean execSQL(Params params);
 
