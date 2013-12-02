@@ -13,6 +13,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 public class SQLFactoryTest {
     private static final Logger LOG = LoggerFactory.getLogger(SQLFactoryTest.class);
@@ -54,6 +55,14 @@ public class SQLFactoryTest {
         String sql = "select user as curuser, :dummy as dummy_param from dual";
         LOG.debug("conn: " + conn);
         cmd.init(conn, sql, new Params().add("dummy", 101));
+        cmd.openCursor(null);
+        Double dummysum = 0.0;
+        while(cmd.next()){
+            try {
+                dummysum += cmd.getResultSet().getDouble("dummy_param");
+            } catch (SQLException ex) {}
+        }
+        LOG.debug("dummysum: "+dummysum);
     }
 
 }

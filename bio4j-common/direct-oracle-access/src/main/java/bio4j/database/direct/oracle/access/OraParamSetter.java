@@ -52,7 +52,7 @@ public class OraParamSetter {
         }
     }
 
-    public void setParamsToStatment(String sql, OraclePreparedStatement statement, Params params) throws SQLException {
+    public void setParamsToStatement(String sql, OraclePreparedStatement statement, Params params) throws SQLException {
         addMissedParamsFromStatement(sql, statement, params);
 
     }

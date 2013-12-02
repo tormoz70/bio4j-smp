@@ -68,14 +68,14 @@ public class OraCommandImpl implements SQLCommand {
 		this.timeout = timeout;
 		this.sql = sql;
 		this.params = params;
-		return this.prepareStatment();
+		return this.prepareStatement();
 	}
     @Override
     public Boolean init(Connection conn, String sql, Params params) {
         return this.init(conn, sql, params, 60);
     }
 
-	private Boolean prepareStatment() {
+	private Boolean prepareStatement() {
         try {
             this.preparedSQL = OraUtils.detectSQLParamsAuto(this.sql, this.connection);
             this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.preparedSQL) : this.preparedSQL;
@@ -89,7 +89,7 @@ public class OraCommandImpl implements SQLCommand {
         }
 	}
 	
-	private Boolean doBeforeStatment(Params params){
+	private Boolean doBeforeStatement(Params params){
         Boolean locCancel = false;
         if(this.beforeEvents.size() > 0) {
             for(SQLCommandBeforeEvent e : this.beforeEvents){
@@ -103,7 +103,7 @@ public class OraCommandImpl implements SQLCommand {
         return !locCancel;
 	}
 
-    private void doAfterStatment(SQLCommandAfterEventAttrs attrs){
+    private void doAfterStatement(SQLCommandAfterEventAttrs attrs){
         if(this.afterEvents.size() > 0) {
             for(SQLCommandAfterEvent e : this.afterEvents)
                 e.handle(this, attrs);
@@ -121,14 +121,14 @@ public class OraCommandImpl implements SQLCommand {
     /**
      * Присваивает значения входящим параметрам
      */
-    private void setParamsToStatment() throws SQLException {
+    private void setParamsToStatement() throws SQLException {
         if(this.paramSetter != null)
-            this.paramSetter.setParamsToStatment(this.preparedSQL, this.preparedStatement, this.params);
+            this.paramSetter.setParamsToStatement(this.preparedSQL, this.preparedStatement, this.params);
     }
 
     private void getBackOutParams() throws SQLException {
         if(this.paramGetter != null)
-            this.paramGetter.getParamsFromStatment(this.preparedStatement, this.params);
+            this.paramGetter.getParamsFromStatement(this.preparedStatement, this.params);
     }
 
     public void setParamSetter(OraParamSetter paramSetter) {
@@ -153,10 +153,10 @@ public class OraCommandImpl implements SQLCommand {
 
                 this.params = this.params.merge(params, true); // Объединяем параметры
 
-                if(!this.doBeforeStatment(this.params)) // Обрабатываем события
+                if(!this.doBeforeStatement(this.params)) // Обрабатываем события
                     return result;
 
-                this.setParamsToStatment(); // Применяем параметры
+                this.setParamsToStatement(); // Применяем параметры
 
                 if (action != null)
                     result = action.execute(); // Выполняем команду
@@ -166,7 +166,7 @@ public class OraCommandImpl implements SQLCommand {
             } catch (SQLException e) {
                 this.lastError = e;
             }
-            this.doAfterStatment(SQLCommandAfterEventAttrs.build ( // Обрабатываем события
+            this.doAfterStatement(SQLCommandAfterEventAttrs.build( // Обрабатываем события
                     this.params, this.resultSet, this.lastError
             ));
         } finally {

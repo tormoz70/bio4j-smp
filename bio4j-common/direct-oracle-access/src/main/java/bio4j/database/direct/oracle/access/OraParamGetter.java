@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
  */
 public class OraParamGetter {
 
-    public void getParamsFromStatment(OraclePreparedStatement statement, Params params) throws SQLException {
+    public void getParamsFromStatement(OraclePreparedStatement statement, Params params) throws SQLException {
 
     }
 }
