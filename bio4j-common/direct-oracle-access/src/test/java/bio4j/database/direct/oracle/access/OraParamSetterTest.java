@@ -1,5 +1,6 @@
 package bio4j.database.direct.oracle.access;
 
+import bio4j.database.direct.oracle.access.impl.OraParamSetter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -15,7 +16,7 @@ import java.util.List;
 public class OraParamSetterTest {
     @Test
     public void testExtractParamNamesFromSQL() throws Exception {
-        List<String> params = OraParamSetter.extractParamNamesFromSQL("select user as curuser, :dummy as dummy_param, ':wer' as mak from dual");
+        List<String> params = OraParamSetter.extractParamNamesFromSQL("select user as curuser, :dummy as dummy_param, ':wer' as mak /* :ert */ from dual");
         Assert.assertEquals(params.size(), 1);
         Assert.assertEquals(params.get(0), "dummy");
     }

@@ -4,11 +4,11 @@
 	xmlns="http://maven.apache.org/POM/4.0.0">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>bio4j</groupId>
+		<groupId>ru.bio4j.smp</groupId>
 		<artifactId>common</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>bio4j-commons</artifactId>
+	<artifactId>bio4j-smp-commons</artifactId>
 	<packaging>jar</packaging>
     <build>
         <plugins>
@@ -17,7 +17,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>bio4j.common.utils</Export-Package>
+                        <Export-Package>ru.bio4j.smp.common.*</Export-Package>
                     </instructions>
                 </configuration>
 	        </plugin>

@@ -2,12 +2,12 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>bio4j</groupId>
+        <groupId>ru.bio4j.smp</groupId>
 		<artifactId>common</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>bio4j-database-api</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>bio4j-smp-database-api</artifactId>
+    <packaging>bundle</packaging>
     <build>
         <plugins>
             <plugin>
@@ -24,7 +24,7 @@
     <dependencies>
     	<dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>${project.groupId}-commons</artifactId>
+            <artifactId>bio4j-smp-commons</artifactId>
         </dependency> 
     </dependencies>
 </project>
