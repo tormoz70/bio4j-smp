@@ -10,7 +10,6 @@ import java.util.Map;
 import org.apache.commons.beanutils.BeanUtils;
 
 import ru.bio4j.smp.common.utils.ConvertValueException;
-import ru.bio4j.smp.common.utils.Converter;
 import ru.bio4j.smp.common.utils.JsonUtl;
 import ru.bio4j.smp.common.utils.StringUtl;
 
@@ -19,6 +18,8 @@ public class Params implements Iterable<Param> {
     private ArrayList<Param> innerParams = new ArrayList<Param>();
     private static final long serialVersionUID = 1L;
 	private static final String csDefaultDelimiter = "/";
+
+    private SqlTypeConverter sqlTypeConverter = new SqlTypeConverterImpl();
 
 	public Param getParam(final String name, final Boolean ignoreCase) {
 		Param result = this.process(new DelegateCheck<Param>() {
@@ -271,4 +272,13 @@ public class Params implements Iterable<Param> {
     public Iterator<Param> iterator() {
         return this.innerParams.iterator();
     }
+
+    public SqlTypeConverter getSqlTypeConverter() {
+        return sqlTypeConverter;
+    }
+
+    public void setSqlTypeConverter(SqlTypeConverter sqlTypeConverter) {
+        this.sqlTypeConverter = sqlTypeConverter;
+    }
+
 }

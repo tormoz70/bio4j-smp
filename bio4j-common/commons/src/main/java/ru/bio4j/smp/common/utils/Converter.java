@@ -1,7 +1,6 @@
 package ru.bio4j.smp.common.utils;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.sql.Types;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -12,17 +11,8 @@ import java.text.ParseException;
  */
 public class Converter {
 
-	public static Boolean typeIsNumber(Class<?> inType) {
-		if ((inType == Byte.class) ||
-                (inType == Short.class) ||
-                (inType == Integer.class) ||
-                (inType == Long.class) ||
-                (inType == Float.class) ||
-                (inType == Double.class) ||
-                (inType == BigDecimal.class) ||
-                (inType == BigInteger.class))
-			return true;
-		return false;
+	public static Boolean typeIsNumber(Class<?> type) {
+		return Number.class.isAssignableFrom(type);
 	}
 
 	private static Object prepareInValue(Object inValue) {
@@ -121,6 +111,10 @@ public class Converter {
 				if (targetType == java.util.Date.class) {
 					if (inType == java.util.Date.class) {
 						return (T) inValue;
+                    } else if (inType == java.sql.Date.class) {
+                        return (T) new java.util.Date(((java.sql.Date)inValue).getTime());
+                    } else if (inType == java.sql.Timestamp.class) {
+                        return (T) new java.util.Date(((java.sql.Timestamp)inValue).getTime());
 					} else if (inType == String.class) {
 						try {
 							return (T) DateTimeParser.getInstance().pars((String) inValue);
@@ -130,8 +124,43 @@ public class Converter {
 					} else {
 						throw new ConvertValueException(inValue, inType, targetType);
 					}
-
-				} else if (targetType == Boolean.class) {
+                } else if (targetType == java.sql.Date.class) {
+                    if (inType == java.sql.Date.class) {
+                        return (T) inValue;
+                    } else if (inType == java.util.Date.class) {
+                        return (T) new java.sql.Date(((java.util.Date)inValue).getTime());
+                    } else if (inType == java.sql.Timestamp.class) {
+                        return (T) new java.sql.Date(((java.sql.Timestamp)inValue).getTime());
+                    } else if (inType == String.class) {
+                        java.util.Date javaDate;
+                        try {
+                            javaDate = DateTimeParser.getInstance().pars((String) inValue);
+                        } catch (DateParseException ex) {
+                            throw new ConvertValueException(inValue, inType, targetType);
+                        }
+                        return (T) toType(javaDate, java.sql.Date.class);
+                    } else {
+                        throw new ConvertValueException(inValue, inType, targetType);
+                    }
+                } else if (targetType == java.sql.Timestamp.class) {
+                    if (inType == java.sql.Timestamp.class) {
+                        return (T) inValue;
+                    } else if (inType == java.util.Date.class) {
+                        return (T) new java.sql.Timestamp(((java.util.Date)inValue).getTime());
+                    } else if (inType == java.sql.Date.class) {
+                        return (T) new java.sql.Timestamp(((java.sql.Date)inValue).getTime());
+                    } else if (inType == String.class) {
+                        java.util.Date javaDate;
+                        try {
+                            javaDate = DateTimeParser.getInstance().pars((String) inValue);
+                        } catch (DateParseException ex) {
+                            throw new ConvertValueException(inValue, inType, targetType);
+                        }
+                        return (T) toType(javaDate, java.sql.Date.class);
+                    } else {
+                        throw new ConvertValueException(inValue, inType, targetType);
+                    }
+                } else if (targetType == Boolean.class) {
 					if (inType == Boolean.class) {
 						return (T) inValue;
 					} else if (typeIsNumber(inType)) {
@@ -147,11 +176,11 @@ public class Converter {
 					}
 				} else if (typeIsNumber(targetType)) {
 					if (typeIsNumber(inType)) {
-						return (T) number2Number((Number)inValue, targetType);
+						return number2Number((Number)inValue, targetType);
 					} else if (inType == Boolean.class) {
 						return (T) new Integer(((Boolean) inValue) ? 1 : 0);
 					} else if (inType == String.class) {
-						return (T) string2Number((String)inValue, targetType);
+						return string2Number((String)inValue, targetType);
 					} else {
 						throw new ConvertValueException(inValue, inType, targetType);
 					}
@@ -165,4 +194,5 @@ public class Converter {
 		}
 		return (T) inValue;
 	}
+
 }

@@ -49,7 +49,7 @@ public class SQLFactoryTest {
         LOG.debug(Utl.buildBeanStateInfo(pool.getStat(), null, null));
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testSQLCommandOpenCursor() {
         Connection conn = pool.getConnection();
 
@@ -66,7 +66,7 @@ public class SQLFactoryTest {
         Assert.assertEquals(dummysum, 101.0);
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testSQLCommandExecSQL() {
         Connection conn = pool.getConnection();
         LOG.debug("conn: " + conn);

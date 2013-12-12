@@ -1,11 +1,13 @@
 package ru.bio4j.smp.common.utils;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import ru.bio4j.smp.common.utils.ConvertValueException;
 import ru.bio4j.smp.common.utils.Converter;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 public class ConverterTest {
 
@@ -107,8 +109,55 @@ public class ConverterTest {
 		checkAType((double)12);
 	}
 	
-	@Test(enabled=false)
+	@Test(enabled=true)
 	public void typeIsNumber() {
-		throw new RuntimeException("Test not implemented");
+        Double doubleValue = 1.2;
+        Assert.assertTrue(doubleValue instanceof Number);
+
+        Class<?> type = Double.class;
+        Assert.assertTrue(Number.class.isAssignableFrom(type));
 	}
+
+    @Test(enabled=true)
+    public void javaDate2sqlDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(2012, (12-1), 20, 15, 11, 50);
+        java.util.Date javadate = calendar.getTime();
+        try {
+            java.sql.Date sqldate = Converter.toType(javadate, java.sql.Date.class);
+            Assert.assertEquals(sqldate.getTime(), javadate.getTime());
+        } catch (ConvertValueException ex) {
+            Assert.fail(ex.getMessage());
+        }
+    }
+
+    @Test(enabled=true)
+    public void sqlDate2javaDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(2012, (12-1), 20, 15, 11, 50);
+        java.sql.Date sqldate = new java.sql.Date(calendar.getTime().getTime());
+        try {
+            java.util.Date javadate = Converter.toType(sqldate, java.util.Date.class);
+            Assert.assertEquals(javadate.getTime(), sqldate.getTime());
+        } catch (ConvertValueException ex) {
+            Assert.fail(ex.getMessage());
+        }
+    }
+
+    @Test(enabled=true)
+    public void sqlTimestamp2javaDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(2012, (12-1), 20, 15, 11, 50);
+        Timestamp sqldate = new Timestamp(calendar.getTime().getTime());
+        try {
+            java.util.Date javadate = Converter.toType(sqldate, java.util.Date.class);
+            Assert.assertEquals(javadate.getTime(), sqldate.getTime());
+        } catch (ConvertValueException ex) {
+            Assert.fail(ex.getMessage());
+        }
+    }
+
 }

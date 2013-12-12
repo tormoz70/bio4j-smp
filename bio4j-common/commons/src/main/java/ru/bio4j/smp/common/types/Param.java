@@ -6,6 +6,8 @@ import ru.bio4j.smp.common.utils.ConvertValueException;
 import ru.bio4j.smp.common.utils.Converter;
 import ru.bio4j.smp.common.utils.StringUtl;
 
+import java.sql.Types;
+
 public class Param implements Cloneable {
 
 	private final Params owner;
@@ -62,6 +64,16 @@ public class Param implements Cloneable {
 	public Class<?> getType() {
 		return this.type;
 	}
+
+    public int getSqlType() {
+        int stringSize = 0;
+        if(this.getType() == String.class){
+            if(((this.getDirection() == Direction.InputOutput) || (this.getDirection() == Direction.Input)) && (stringSize == 0))
+                stringSize = StringUtl.isNullOrEmpty(this.getValueAsString()) ? 0 : this.getValueAsString().length();
+        }
+        boolean isCallable = (this.getDirection() == Direction.InputOutput) || (this.getDirection() == Direction.Output);
+        return this.owner.getSqlTypeConverter().write(this.getType(), stringSize, isCallable);
+    }
 
 	public int getSize() {
 		return this.size;

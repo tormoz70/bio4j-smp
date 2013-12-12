@@ -1,5 +1,8 @@
 package bio4j.database.direct.oracle.access.impl;
 
+import oracle.jdbc.OracleCallableStatement;
+import oracle.jdbc.OracleStatement;
+import ru.bio4j.smp.common.types.Direction;
 import ru.bio4j.smp.common.types.Param;
 import ru.bio4j.smp.common.types.Params;
 import ru.bio4j.smp.common.utils.RegexUtl;
@@ -77,10 +80,20 @@ public class OraParamSetter {
         final List<String> paramsNames = extractParamNamesFromSQL(sql);
         for (int i = 0; i < paramsNames.size(); i++) {
             Param param = params.getParam(paramsNames.get(i));
-            if(param != null) {
-                statement.setObjectAtName(paramsNames.get(i), param.getValue());
-            } else
-                statement.setNullAtName(paramsNames.get(i), Types.NULL);
+
+            if (statement instanceof OraclePreparedStatement) {
+                if (param != null) {
+                    if ((param.getDirection() == Direction.Input) || (param.getDirection() == Direction.InputOutput))
+                        ((OraclePreparedStatement)statement).setObjectAtName(paramsNames.get(i), param.getValue());
+                    if ((param.getDirection() == Direction.Output) || (param.getDirection() == Direction.InputOutput)) {
+                        if (statement instanceof OracleCallableStatement) {
+                            ((OracleCallableStatement)statement).registerOutParameter(paramsNames.get(i), param.getSqlType());
+                        }
+                    }
+                } else
+                    ((OraclePreparedStatement)statement).setNullAtName(paramsNames.get(i), Types.NULL);
+            }
+
         }
     }
 }
