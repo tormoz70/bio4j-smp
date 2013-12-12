@@ -12,6 +12,7 @@ public interface SQLCommand {
     boolean init(Connection conn, String sql, Params prms);
 
 	boolean openCursor(Params params);
+    boolean openCursor();
 
 	Params getParams();
 
@@ -40,6 +41,10 @@ public interface SQLCommand {
     Exception getLastError();
 
     boolean execSQL(Params params);
+    boolean execSQL();
+
+    <T> T execScalar(Class<T> clazz, Params params);
+    <T> T execScalar(Class<T> clazz);
 
     void addBeforeEvent(SQLCommandBeforeEvent e);
     void addAfterEvent(SQLCommandAfterEvent e);

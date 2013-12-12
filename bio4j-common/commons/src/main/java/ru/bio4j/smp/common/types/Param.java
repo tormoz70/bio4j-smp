@@ -2,6 +2,8 @@ package ru.bio4j.smp.common.types;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import ru.bio4j.smp.common.utils.ConvertValueException;
+import ru.bio4j.smp.common.utils.Converter;
 import ru.bio4j.smp.common.utils.StringUtl;
 
 public class Param implements Cloneable {
@@ -30,7 +32,7 @@ public class Param implements Cloneable {
 	}
 
 	protected Param export(Params destOwner) {
-		return ParamBuilder.copy(this).setOwner(destOwner).build();
+		return ParamBuilder.override(this).owner(destOwner).build();
 	}
 
 	public String getName() {
@@ -41,8 +43,16 @@ public class Param implements Cloneable {
 		return this.value;
 	}
 
+    public <T> T getValue(Class<T> type) throws ConvertValueException {
+        return Converter.toType(this.value, type);
+    }
+
 	public String getValueAsString() {
-		return (this.value == null) ? null : this.value.toString();
+        try{
+		    return (this.value == null) ? null : Converter.toType(this.value, String.class);
+        } catch (ConvertValueException ex) {
+            return ex.getMessage();
+        }
 	}
 
 	public Object getInnerObject() {
@@ -80,16 +90,16 @@ public class Param implements Cloneable {
 
 	@Override
     public Param clone() throws CloneNotSupportedException {
-		ParamBuilder builder = ParamBuilder.copy(this);
+		ParamBuilder builder = ParamBuilder.override(this);
 		try {
-			builder.setValue(BeanUtils.cloneBean(this.getValue()));
+			builder.value(BeanUtils.cloneBean(this.getValue()));
 		} catch(Exception ex) {
-			builder.setValue(this.getValue());
+			builder.value(this.getValue());
 		}
 		try {
-			builder.setInnerObject(BeanUtils.cloneBean(this.getInnerObject()));
+			builder.innerObject(BeanUtils.cloneBean(this.getInnerObject()));
 		} catch(Exception ex) {
-			builder.setInnerObject(this.getInnerObject());
+			builder.innerObject(this.getInnerObject());
 		}
 	    return builder.build();
     }

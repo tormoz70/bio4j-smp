@@ -1,5 +1,8 @@
 package bio4j.database.direct.oracle.access;
 
+import ru.bio4j.smp.common.types.Direction;
+import ru.bio4j.smp.common.types.Param;
+import ru.bio4j.smp.common.types.ParamBuilder;
 import ru.bio4j.smp.common.types.Params;
 import ru.bio4j.smp.common.utils.Utl;
 import ru.bio4j.smp.database.api.SQLCommand;
@@ -47,7 +50,7 @@ public class SQLFactoryTest {
     }
 
     @Test(enabled = true)
-    public void testCreateSQLCommand() {
+    public void testSQLCommandOpenCursor() {
         Connection conn = pool.getConnection();
 
         SQLCommand cmd = OraFactory.CreateSQLCommand();
@@ -61,6 +64,34 @@ public class SQLFactoryTest {
         }
         LOG.debug("dummysum: "+dummysum);
         Assert.assertEquals(dummysum, 101.0);
+    }
+
+    @Test(enabled = true)
+    public void testSQLCommandExecSQL() {
+        Connection conn = pool.getConnection();
+        LOG.debug("conn: " + conn);
+
+        SQLCommand cmd = OraFactory.CreateSQLCommand();
+        String sql = "begin :rslt := :param1 + :param2; end;";
+        Params params = new Params()
+                .add("param1", 101.3)
+                .add("param2", 103.2)
+                .add(new ParamBuilder()
+                    .name("rslt")
+                    .type(Double.class)
+                    .direction(Direction.Output)
+                    .build());
+        cmd.init(conn, sql, params);
+        cmd.execSQL();
+        Double dummysum = 0.0;
+        try {
+            dummysum = cmd.getParams().getParam("rslt").getValue(Double.class);
+        } catch (Exception ex) {
+            LOG.error("Error!", ex);
+            Assert.fail();
+        }
+        LOG.debug("dummysum: "+dummysum);
+        Assert.assertEquals(dummysum, 204.5);
     }
 
 }

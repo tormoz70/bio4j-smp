@@ -3,7 +3,7 @@ package ru.bio4j.smp.common.types;
 
 public class ParamBuilder {
 
-	private final String name;
+	private String name;
 
 	private Params owner;
 
@@ -13,30 +13,46 @@ public class ParamBuilder {
 	private int size;
 	private Direction direction;
 
-	public ParamBuilder(String name) {
-		this.name = name;
+	public ParamBuilder() {
 	}
 
-	public static ParamBuilder copy(Param copyFrom) {
-		ParamBuilder builder = new ParamBuilder(copyFrom.getName());
-		builder.owner = copyFrom.getOwner();
-		builder.value = copyFrom.getValue();
-		builder.innerObject = copyFrom.getInnerObject();
-		builder.type = copyFrom.getType();
-		builder.size = copyFrom.getSize();
-		builder.direction = copyFrom.getDirection();
-		return builder;
+	public static Param copy(Param copyFrom) {
+        return new ParamBuilder()
+            .name(copyFrom.getName())
+		    .owner(copyFrom.getOwner())
+		    .value(copyFrom.getValue())
+		    .innerObject(copyFrom.getInnerObject())
+		    .type(copyFrom.getType())
+		    .size(copyFrom.getSize())
+		    .direction(copyFrom.getDirection())
+            .build();
 	}
-	
+
+    public static ParamBuilder override(Param param) {
+        return new ParamBuilder()
+                .name(param.getName())
+                .owner(param.getOwner())
+                .value(param.getValue())
+                .innerObject(param.getInnerObject())
+                .type(param.getType())
+                .size(param.getSize())
+                .direction(param.getDirection());
+    }
+
 	public String getName() {
 		return name;
 	}
+
+    public ParamBuilder name(String name) {
+        this.name = name;
+        return this;
+    }
 
 	public Params getOwner() {
 		return owner;
 	}
 
-	public ParamBuilder setOwner(Params owner) {
+	public ParamBuilder owner(Params owner) {
 		this.owner = owner;
 		return this;
 	}
@@ -45,7 +61,7 @@ public class ParamBuilder {
 		return value;
 	}
 
-	public ParamBuilder setValue(Object value) {
+	public ParamBuilder value(Object value) {
 		this.value = value;
 		return this;
 	}
@@ -54,7 +70,7 @@ public class ParamBuilder {
 		return innerObject;
 	}
 
-	public ParamBuilder setInnerObject(Object innerObject) {
+	public ParamBuilder innerObject(Object innerObject) {
 		this.innerObject = innerObject;
 		return this;
 	}
@@ -63,7 +79,7 @@ public class ParamBuilder {
 		return type;
 	}
 
-	public ParamBuilder setType(Class<?> type) {
+	public ParamBuilder type(Class<?> type) {
 		this.type = type;
 		return this;
 	}
@@ -72,7 +88,7 @@ public class ParamBuilder {
 		return size;
 	}
 
-	public ParamBuilder setSize(int size) {
+	public ParamBuilder size(int size) {
 		this.size = size;
 		return this;
 	}
@@ -81,7 +97,7 @@ public class ParamBuilder {
 		return direction;
 	}
 
-	public ParamBuilder setDirection(Direction direction) {
+	public ParamBuilder direction(Direction direction) {
 		this.direction = direction;
 		return this;
 	}
@@ -89,4 +105,5 @@ public class ParamBuilder {
 	public Param build() {
 		return new Param(this);
 	}
+
 }

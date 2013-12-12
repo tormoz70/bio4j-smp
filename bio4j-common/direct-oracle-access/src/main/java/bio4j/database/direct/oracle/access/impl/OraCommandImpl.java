@@ -196,6 +196,11 @@ public class OraCommandImpl implements SQLCommand {
 	}
 
     @Override
+    public boolean openCursor() {
+        return this.openCursor(null);
+    }
+
+    @Override
 	public boolean execSQL(Params params) {
         return (boolean)this.processStatement(StatementType.EXEC, params, new DelegateSQLAction<Boolean>() {
             @Override
@@ -207,7 +212,13 @@ public class OraCommandImpl implements SQLCommand {
         });
 	}
 
+    @Override
+    public boolean execSQL() {
+        return this.execSQL(null);
+    }
+
 	@SuppressWarnings("unchecked")
+    @Override
 	public <T> T execScalar(Class<T> clazz, Params params){
         return (T)this.processStatement(StatementType.SCALAR, params, new DelegateSQLAction<T>() {
             @Override
@@ -221,7 +232,12 @@ public class OraCommandImpl implements SQLCommand {
             }
         });
 	}
-	
+
+    @Override
+    public <T> T execScalar(Class<T> clazz){
+        return this.execScalar(clazz, null);
+    }
+
 	@Override
 	public boolean cancel() {
         if (this.lastError != null)

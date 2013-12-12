@@ -4,15 +4,19 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import ru.bio4j.smp.common.utils.ConvertValueException;
+import ru.bio4j.smp.common.utils.Converter;
 import ru.bio4j.smp.common.utils.JsonUtl;
 import ru.bio4j.smp.common.utils.StringUtl;
 
-public class Params extends ArrayList<Param> {
+public class Params implements Iterable<Param> {
 
+    private ArrayList<Param> innerParams = new ArrayList<Param>();
     private static final long serialVersionUID = 1L;
 	private static final String csDefaultDelimiter = "/";
 
@@ -46,7 +50,7 @@ public class Params extends ArrayList<Param> {
 	}
 
 	public Integer getIndexOf(String name) {
-		return this.indexOf(this.getParam(name, true));
+		return this.innerParams.indexOf(this.getParam(name, true));
 	}
 
 	public Params process(DelegateCheck<Param> check) {
@@ -59,8 +63,8 @@ public class Params extends ArrayList<Param> {
 	}
 
 	public Param first() {
-		if (!this.isEmpty())
-			return this.get(0);
+		if (!this.innerParams.isEmpty())
+			return this.innerParams.get(0);
 		else
 			return null;
 	}
@@ -73,7 +77,7 @@ public class Params extends ArrayList<Param> {
 
 	public Param remove(String name) {
 		Param rslt = this.getParam(name);
-		this.remove(rslt);
+		this.innerParams.remove(rslt);
 		return rslt;
 	}
 
@@ -82,7 +86,7 @@ public class Params extends ArrayList<Param> {
 		Param exists = this.getParam(name);
 		if (exists != null) {
 			if (replaceIfExists) {
-				this.remove(exists);
+				this.innerParams.remove(exists);
 				exists = null;
 			} else
 				result = true;
@@ -93,17 +97,20 @@ public class Params extends ArrayList<Param> {
 	public Params add(Param item, Boolean replaceIfExists) {
 		if (item != null) {
 			if (!this.alredyExists(item.getName(), replaceIfExists))
-				super.add(item);
+				this.innerParams.add(item);
 		}
 		return this;
 	}
 
+    public Params add(Param item) {
+        return this.add(item, false);
+    }
+
+
 	public Params add(String name, Object value, Boolean replaceIfExists) {
 		if (!StringUtl.isNullOrEmpty(name)) {
-			if (!this.alredyExists(name, replaceIfExists)) {
-				Param rslt = new ParamBuilder(name).setOwner(this).setValue(value).build();
-				super.add(rslt);
-			}
+			if (!this.alredyExists(name, replaceIfExists))
+				this.innerParams.add(new ParamBuilder().name(name).owner(this).value(value).build());
 		}
 		return this;
 	}
@@ -113,7 +120,7 @@ public class Params extends ArrayList<Param> {
 	}
 
 	public Params add(String name, Object value, Object innerObject) {
-		return this.add(new ParamBuilder(name).setValue(value).setInnerObject(innerObject).build(), false);
+		return this.add(new ParamBuilder().name(name).value(value).innerObject(innerObject).build(), false);
 	}
 
 	public Params merge(Params params, Boolean overwrite) {
@@ -144,6 +151,13 @@ public class Params extends ArrayList<Param> {
 			return param.getValue();
 		return null;
 	}
+
+    public <T> T getValueByName(Class<T> type, String name, Boolean ignoreCase) throws ConvertValueException {
+        Param param = this.getParam(name, ignoreCase);
+        if (param != null)
+            return param.getValue(type);
+        return null;
+    }
 
 	public Map<String, String> toMap() {
 		Map<String, String> rslt = new HashMap<String, String>();
@@ -219,7 +233,7 @@ public class Params extends ArrayList<Param> {
 		String[] strs = StringUtl.split(names, delimiter);
 		for (int i = 0; i < strs.length; i++)
 			if (i < values.length)
-				this.add(new ParamBuilder(strs[i]).setValue(values[i]).build(), true);
+				this.add(new ParamBuilder().name(strs[i]).value(values[i]).build(), true);
 		return this;
 	}
 
@@ -252,5 +266,9 @@ public class Params extends ArrayList<Param> {
 			return result;
 		}
     }
-	
+
+    @Override
+    public Iterator<Param> iterator() {
+        return this.innerParams.iterator();
+    }
 }

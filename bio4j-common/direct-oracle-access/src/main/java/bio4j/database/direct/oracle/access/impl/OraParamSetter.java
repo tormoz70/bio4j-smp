@@ -38,6 +38,10 @@ public class OraParamSetter {
         sql = RegexUtl.replace(sql, "[/]\\*.*?\\*[/]", "", true);
         LOG.debug("sql: " + sql);
 
+        LOG.debug("Удаляем все операторы присвоения");
+        sql = RegexUtl.replace(sql, ":=", "", true);
+        LOG.debug("sql: " + sql);
+
         LOG.debug("Находим все параметры вида :qwe_ad");
         Matcher m = RegexUtl.match(sql, "(?<=:)\\b[\\w\\#\\$]+", true);
         while(m.find()) {
