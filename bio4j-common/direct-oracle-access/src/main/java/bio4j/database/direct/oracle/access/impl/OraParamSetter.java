@@ -1,7 +1,6 @@
 package bio4j.database.direct.oracle.access.impl;
 
 import oracle.jdbc.OracleCallableStatement;
-import oracle.jdbc.OracleStatement;
 import ru.bio4j.smp.common.types.Direction;
 import ru.bio4j.smp.common.types.Param;
 import ru.bio4j.smp.common.types.Params;
@@ -9,7 +8,6 @@ import ru.bio4j.smp.common.utils.RegexUtl;
 import oracle.jdbc.OraclePreparedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.bio4j.smp.common.utils.Utl;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -26,8 +24,8 @@ import java.util.regex.Matcher;
 public class OraParamSetter {
     private static final Logger LOG = LoggerFactory.getLogger(OraParamSetter.class);
 
-    private OraCommandImpl owner;
-    public OraParamSetter(OraCommandImpl owner) {
+    private OraCommand owner;
+    public OraParamSetter(OraCommand owner) {
         this.owner = owner;
     }
 
@@ -74,10 +72,10 @@ public class OraParamSetter {
 //        }   }
     }
 
-    public void setParamsToStatement(String sql, OraclePreparedStatement statement, Params params) throws SQLException {
+    public void setParamsToStatement(OraclePreparedStatement statement, Params params) throws SQLException {
         //addMissedParamsFromStatement(sql, statement, params);
         //final OracleParameterMetaData paramMetadata = (OracleParameterMetaData)statement.getParameterMetaData();
-
+        String sql = "";
         final List<String> paramsNames = extractParamNamesFromSQL(sql);
         final List<Param> outParams = new ArrayList<>();
         for (int i = 0; i < paramsNames.size(); i++) {
@@ -101,7 +99,8 @@ public class OraParamSetter {
             if (statement instanceof OracleCallableStatement) {
                 int sqlType = outParam.getSqlType();
                 //if(Utl.arrayContains(new Integer[] {Types.DECIMAL, Types.NUMERIC}, sqlType))
-                    ((OracleCallableStatement)statement).registerOutParameter(outParam.getName(), sqlType, 0);
+                String paramName = outParam.getName();
+                    ((OracleCallableStatement)statement).registerOutParameter(paramName, sqlType, 2);
                 //else
                 //    ((OracleCallableStatement)statement).registerOutParameter(outParam.getName(), sqlType);
             }

@@ -13,16 +13,16 @@ import oracle.ucp.jdbc.PoolDataSourceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OraConnectionPoolImpl implements SQLConnectionPool {
-    private static final Logger LOG = LoggerFactory.getLogger(OraCommandImpl.class);
+public class OraConnectionPool implements SQLConnectionPool {
+    private static final Logger LOG = LoggerFactory.getLogger(OraCommand.class);
 
     private PoolDataSource cpool;
 
-    private OraConnectionPoolImpl(PoolDataSource cpool) {
+    private OraConnectionPool(PoolDataSource cpool) {
         this.cpool = cpool;
     }
 
-    public static OraConnectionPoolImpl create(String poolName, SQLConnectionPoolConfig config) throws SQLException {
+    public static OraConnectionPool create(String poolName, SQLConnectionPoolConfig config) throws SQLException {
         LOG.debug("Creating SQLConnectionPool with:\n" + Utl.buildBeanStateInfo(config, null, "\t"));
 
         PoolDataSource pool = new PoolDataSourceImpl();
@@ -36,7 +36,7 @@ public class OraConnectionPoolImpl implements SQLConnectionPool {
         pool.setMaxPoolSize(config.getMaxPoolSize());
         pool.setConnectionWaitTimeout(config.getConnectionWaitTimeout());
         pool.setInitialPoolSize(config.getInitialPoolSize());
-        return new OraConnectionPoolImpl(pool);
+        return new OraConnectionPool(pool);
     }
 
     public void Close(){

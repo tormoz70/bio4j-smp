@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 public class OraMetaDataReader {
     private static final Logger LOG = LoggerFactory.getLogger(OraMetaDataReader.class);
 
-    private OraCommandImpl owner;
-    public OraMetaDataReader(OraCommandImpl owner) {
+    private OraCommand owner;
+    public OraMetaDataReader(OraCommand owner) {
         this.owner = owner;
     }
 
