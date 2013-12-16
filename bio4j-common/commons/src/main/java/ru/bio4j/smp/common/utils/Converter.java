@@ -1,6 +1,5 @@
 package ru.bio4j.smp.common.utils;
 
-import java.sql.Types;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -15,7 +14,7 @@ public class Converter {
 		return Number.class.isAssignableFrom(type);
 	}
 
-	private static Object prepareInValue(Object inValue) {
+	private static Object wrapPrimitive(Object inValue) {
 		Class<?> inType = (inValue == null) ? null : inValue.getClass();
 		if (inType == boolean.class)
 			return new Boolean((boolean) inValue);
@@ -36,7 +35,7 @@ public class Converter {
 		return inValue;
 	}
 
-	private static Class<?> prepareInType(Class<?> inType) {
+	private static Class<?> wrapPrimitiveType(Class<?> inType) {
 		if (inType == boolean.class)
 			return Boolean.class;
 		if (inType == byte.class)
@@ -101,9 +100,9 @@ public class Converter {
 	public static <T> T toType(Object inValue, Class<T> targetType) throws ConvertValueException {
 		if ((targetType != null) && (inValue != null) && (inValue.getClass() == targetType))
 			return (T) inValue;
-		inValue = prepareInValue(inValue);
+		inValue = wrapPrimitive(inValue);
 		if (targetType.isPrimitive()) {
-			return (T) toType(inValue, prepareInType(targetType));
+			return (T) toType(inValue, wrapPrimitiveType(targetType));
 		}
 		Class<?> inType = (inValue == null) ? null : inValue.getClass();
 		if (targetType != null) {

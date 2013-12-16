@@ -13,11 +13,13 @@ public class Param implements Cloneable {
 	private final Params owner;
 	private final String name;
 
-	private final Object value;
+    private Object value;
 	private final Object innerObject;
 	private final Class<?> type;
 	private final  int size;
 	private final  Direction direction;
+
+    private int id;
 
 	public Param(ParamBuilder builder) {
 		this.name = builder.getName();
@@ -34,7 +36,7 @@ public class Param implements Cloneable {
 	}
 
 	protected Param export(Params destOwner) {
-		return ParamBuilder.override(this).owner(destOwner).build();
+		return ParamBuilder.override(this, destOwner).build();
 	}
 
 	public String getName() {
@@ -102,7 +104,7 @@ public class Param implements Cloneable {
 
 	@Override
     public Param clone() throws CloneNotSupportedException {
-		ParamBuilder builder = ParamBuilder.override(this);
+		ParamBuilder builder = ParamBuilder.override(this, this.getOwner());
 		try {
 			builder.value(BeanUtils.cloneBean(this.getValue()));
 		} catch(Exception ex) {
@@ -115,5 +117,17 @@ public class Param implements Cloneable {
 		}
 	    return builder.build();
     }
-	
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
 }

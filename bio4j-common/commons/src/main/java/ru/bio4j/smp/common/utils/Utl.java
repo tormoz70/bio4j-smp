@@ -260,5 +260,12 @@ public class Utl {
         out.append(tab + "}");
         return out.toString();
     }
+
+    public static <T> boolean arrayContains(T[] array, T item) {
+        for (T itm : array)
+            if (itm == item)
+                return true;
+        return false;
+    }
 }
 

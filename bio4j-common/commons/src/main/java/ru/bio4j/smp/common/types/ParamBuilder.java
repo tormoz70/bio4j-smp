@@ -3,23 +3,23 @@ package ru.bio4j.smp.common.types;
 
 public class ParamBuilder {
 
-	private String name;
+	private String name = null;
 
-	private Params owner;
+	private Params owner = null;
 
-	private Object value;
-	private Object innerObject;
-	private Class<?> type;
-	private int size;
-	private Direction direction;
+	private Object value = null;
+	private Object innerObject = null;
+	private Class<?> type = Object.class;
+	private int size = 0;
+	private Direction direction = Direction.Input;
 
-	public ParamBuilder() {
+	public ParamBuilder(Params owner) {
+        this.owner = owner;
 	}
 
-	public static Param copy(Param copyFrom) {
-        return new ParamBuilder()
+	public static Param copy(Param copyFrom, Params dest) {
+        return new ParamBuilder(dest)
             .name(copyFrom.getName())
-		    .owner(copyFrom.getOwner())
 		    .value(copyFrom.getValue())
 		    .innerObject(copyFrom.getInnerObject())
 		    .type(copyFrom.getType())
@@ -28,19 +28,18 @@ public class ParamBuilder {
             .build();
 	}
 
-    public static ParamBuilder override(Param param) {
-        return new ParamBuilder()
-                .name(param.getName())
-                .owner(param.getOwner())
-                .value(param.getValue())
-                .innerObject(param.getInnerObject())
-                .type(param.getType())
-                .size(param.getSize())
-                .direction(param.getDirection());
+    public static ParamBuilder override(Param param, Params dest) {
+        return new ParamBuilder(dest)
+            .name(param.getName())
+            .value(param.getValue())
+            .innerObject(param.getInnerObject())
+            .type(param.getType())
+            .size(param.getSize())
+            .direction(param.getDirection());
     }
 
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
     public ParamBuilder name(String name) {
@@ -49,16 +48,11 @@ public class ParamBuilder {
     }
 
 	public Params getOwner() {
-		return owner;
-	}
-
-	public ParamBuilder owner(Params owner) {
-		this.owner = owner;
-		return this;
+		return this.owner;
 	}
 
 	public Object getValue() {
-		return value;
+		return this.value;
 	}
 
 	public ParamBuilder value(Object value) {
@@ -67,7 +61,7 @@ public class ParamBuilder {
 	}
 
 	public Object getInnerObject() {
-		return innerObject;
+		return this.innerObject;
 	}
 
 	public ParamBuilder innerObject(Object innerObject) {
@@ -76,7 +70,7 @@ public class ParamBuilder {
 	}
 
 	public Class<?> getType() {
-		return type;
+		return this.type;
 	}
 
 	public ParamBuilder type(Class<?> type) {
@@ -85,7 +79,7 @@ public class ParamBuilder {
 	}
 
 	public int getSize() {
-		return size;
+		return this.size;
 	}
 
 	public ParamBuilder size(int size) {

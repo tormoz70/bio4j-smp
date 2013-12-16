@@ -22,8 +22,8 @@
         </plugins>
     </build>
     <properties>
-        <ojdbc6.version>11.2.0</ojdbc6.version>
-        <oucp.version>11.2.0</oucp.version>
+        <ojdbc6.version>12.1.0</ojdbc6.version>
+        <oucp.version>12.1.0</oucp.version>
     </properties>
     <dependencies>
         <dependency>

@@ -8,8 +8,8 @@ import java.util.Map;
 import ru.bio4j.smp.common.types.Params;
 
 public interface SQLCommand {
-	boolean init(Connection conn, String sql, Params prms, int timeout);
-    boolean init(Connection conn, String sql, Params prms);
+	boolean init(StatementType statementType, Connection conn, String sql, Params prms, int timeout);
+    boolean init(StatementType statementType, Connection conn, String sql, Params prms);
 
 	boolean openCursor(Params params);
     boolean openCursor();

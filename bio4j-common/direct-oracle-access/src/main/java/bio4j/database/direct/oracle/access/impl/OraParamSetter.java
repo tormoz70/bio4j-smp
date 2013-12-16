@@ -9,6 +9,7 @@ import ru.bio4j.smp.common.utils.RegexUtl;
 import oracle.jdbc.OraclePreparedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.bio4j.smp.common.utils.Utl;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -78,22 +79,32 @@ public class OraParamSetter {
         //final OracleParameterMetaData paramMetadata = (OracleParameterMetaData)statement.getParameterMetaData();
 
         final List<String> paramsNames = extractParamNamesFromSQL(sql);
+        final List<Param> outParams = new ArrayList<>();
         for (int i = 0; i < paramsNames.size(); i++) {
-            Param param = params.getParam(paramsNames.get(i));
-
+            String paramName = paramsNames.get(i);
+            Param param = params.getParam(paramName);
             if (statement instanceof OraclePreparedStatement) {
                 if (param != null) {
-                    if ((param.getDirection() == Direction.Input) || (param.getDirection() == Direction.InputOutput))
-                        ((OraclePreparedStatement)statement).setObjectAtName(paramsNames.get(i), param.getValue());
+                    param.setId(i + 1);
+                    if ((param.getDirection() == Direction.Input) || (param.getDirection() == Direction.InputOutput)) {
+                        statement.setObjectAtName(paramName, param.getValue());
+                    }
                     if ((param.getDirection() == Direction.Output) || (param.getDirection() == Direction.InputOutput)) {
-                        if (statement instanceof OracleCallableStatement) {
-                            ((OracleCallableStatement)statement).registerOutParameter(paramsNames.get(i), param.getSqlType());
-                        }
+                        outParams.add(param);
                     }
                 } else
-                    ((OraclePreparedStatement)statement).setNullAtName(paramsNames.get(i), Types.NULL);
+                    ((OraclePreparedStatement)statement).setNullAtName(paramName, Types.NULL);
             }
 
+        }
+        for (Param outParam : outParams) {
+            if (statement instanceof OracleCallableStatement) {
+                int sqlType = outParam.getSqlType();
+                //if(Utl.arrayContains(new Integer[] {Types.DECIMAL, Types.NUMERIC}, sqlType))
+                    ((OracleCallableStatement)statement).registerOutParameter(outParam.getName(), sqlType, 0);
+                //else
+                //    ((OracleCallableStatement)statement).registerOutParameter(outParam.getName(), sqlType);
+            }
         }
     }
 }
