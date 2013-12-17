@@ -20,8 +20,6 @@ public interface SQLCursor extends SQLCommand {
 
 	boolean isActive();
 
-	String getPreparedSQL();
-
 	String getSQL();
 
 	Map<String, Field> getRow();

@@ -17,16 +17,14 @@ public class OraStoredProc extends OraCommand implements SQLStoredProc {
     private static final Logger LOG = LoggerFactory.getLogger(OraStoredProc.class);
 
     private String storedProcName;
-    private String callStoredProcSQL;
 
     public OraStoredProc() {
 	}
 
 	@Override
 	public boolean init(Connection conn, String storedProcName, Params params, int timeout) {
-        boolean rslt = super.init(conn, params, timeout);
         this.storedProcName = storedProcName;
-		return rslt && this.prepareStatement();
+		return super.init(conn, params, timeout) && this.prepareStatement();
 	}
     @Override
     public boolean init(Connection conn, String storedProcName, Params params) {
@@ -36,9 +34,9 @@ public class OraStoredProc extends OraCommand implements SQLStoredProc {
     @Override
 	protected boolean prepareStatement() {
         try {
-            this.storedProcName = OraUtils.detectSQLParamsAuto(this.storedProcName, this.connection);
-            this.callStoredProcSQL = this.storedProcName;
-            this.preparedStatement = (OracleCallableStatement)this.connection.prepareCall(this.callStoredProcSQL);
+            this.preparedSQL = OraUtils.detectStoredProcParamsAuto(this.storedProcName, this.connection);
+            this.preparedSQL = "{call " + this.preparedSQL + "}";
+            this.preparedStatement = (OracleCallableStatement)this.connection.prepareCall(this.preparedSQL);
             this.preparedStatement.setQueryTimeout(this.timeout);
             return true;
         } catch (SQLException ex) {
@@ -48,7 +46,7 @@ public class OraStoredProc extends OraCommand implements SQLStoredProc {
         }
 	}
 	
-//    @Override
+    @Override
 	public boolean execSQL(Params params) {
         return (boolean)this.processStatement(params, new DelegateSQLAction<Boolean>() {
             @Override
@@ -60,7 +58,7 @@ public class OraStoredProc extends OraCommand implements SQLStoredProc {
         });
 	}
 
-//    @Override
+    @Override
     public boolean execSQL() {
         return this.execSQL(null);
     }

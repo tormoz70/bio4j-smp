@@ -8,14 +8,14 @@ import java.sql.SQLException;
 public class OraFactory {
 	public static SQLCursor CreateSQLCursor(){
         OraCursor cmd = new OraCursor();
-        cmd.setParamSetter(new OraParamSetter(cmd));
+        cmd.setParamSetter(new OraSelectableParamSetter(cmd));
 		return cmd;
 	}
 
     public static SQLStoredProc CreateSQLStoredProc(){
         OraStoredProc cmd = new OraStoredProc();
-        cmd.setParamSetter(new OraParamSetter(cmd));
-        cmd.setParamGetter(new OraParamGetter(cmd));
+        cmd.setParamSetter(new OraCallableParamSetter(cmd));
+        cmd.setParamGetter(new OraCallableParamGetter(cmd));
         return cmd;
     }
 

@@ -11,16 +11,6 @@ import java.sql.SQLException;
 /**
  * Вытаскивает OUT параметры из statement и засовывает их в params
  */
-public class OraParamGetter {
-    private OraCommand owner;
-    public OraParamGetter(OraCommand owner) {
-        this.owner = owner;
-    }
-
-    public void getParamsFromStatement(OracleCallableStatement statement, Params params) throws SQLException {
-        for(Param param : this.owner.getParams()) {
-            if (Utl.arrayContains(new Direction[] {Direction.InputOutput, Direction.Output}, param.getDirection()))
-                param.setValue(statement.getObject(param.getName()));
-        }
-    }
+public interface OraParamGetter {
+    public void getParamsFromStatement(OracleCallableStatement statement, Params params) throws SQLException;
 }

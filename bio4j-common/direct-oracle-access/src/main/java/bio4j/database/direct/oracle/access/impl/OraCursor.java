@@ -30,7 +30,6 @@ public class OraCursor extends OraCommand implements SQLCursor {
 	private boolean isActive = false;
 
 	private String sql = null;
-	private String preparedSQL = null;
 	private long currentFetchedRowPosition = 0L;
 
     public OraCursor() {
@@ -38,10 +37,10 @@ public class OraCursor extends OraCommand implements SQLCursor {
 
 	@Override
 	public boolean init(Connection conn, String sql, Params params, int timeout) {
-        boolean rslt = super.init(conn, params, timeout);
-		this.sql = sql;
-		return rslt && this.prepareStatement();
+        this.sql = sql;
+		return super.init(conn, params, timeout) && this.prepareStatement();
 	}
+
     @Override
     public boolean init(Connection conn, String sql, Params params) {
         return this.init(conn, sql, params, 60);
@@ -50,8 +49,7 @@ public class OraCursor extends OraCommand implements SQLCursor {
     @Override
 	protected boolean prepareStatement() {
         try {
-            this.preparedSQL = OraUtils.detectSQLParamsAuto(this.sql, this.connection);
-            this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.preparedSQL) : this.preparedSQL;
+            this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.sql) : this.sql;
             this.preparedStatement = (OraclePreparedStatement)this.connection.prepareStatement(this.preparedSQL, ResultSet.TYPE_FORWARD_ONLY);
             this.preparedStatement.setQueryTimeout(this.timeout);
             return true;
@@ -62,6 +60,14 @@ public class OraCursor extends OraCommand implements SQLCursor {
         }
 	}
 
+
+    @Override
+    protected void resetCommand() {
+        super.resetCommand();
+        if (this.isActive())
+            this.closeCursor();
+        this.currentFetchedRowPosition = 0L;
+    }
 
 	@Override
 	public boolean openCursor(Params params) {
@@ -189,11 +195,6 @@ public class OraCursor extends OraCommand implements SQLCursor {
 	@Override
 	public boolean isActive() {
 		return this.isActive;
-	}
-
-	@Override
-	public String getPreparedSQL() {
-		return this.preparedSQL;
 	}
 
 	@Override

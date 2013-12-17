@@ -8,6 +8,8 @@ import oracle.jdbc.OracleResultSet;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 
 /**
@@ -25,12 +27,21 @@ public class OraUtils {
 
     /**
      * Вытаскивает из SQL имя пакета и метода
-     * @param sql
+     * @param storedProcName  - имя процедуры в виде [methodName] или [packageName].[methodName]
      * @return
      */
-    public static OraUtils.PackageName detectAutoDBMSParamsParts(String sql) {
-        String pkgName = RegexUtl.find(sql, "\\b[\\w$]+\\b(?=[.])", true);
-        String methodName = RegexUtl.find(sql, "(?<=[.])\\b[\\w$]+\\b(?=\\s*[(;])", true);
+    public static OraUtils.PackageName parsStoredProcName(String storedProcName) {
+        //String pkgName = RegexUtl.find(storedProcName, "\\b[\\w$]+\\b(?=[.])", true);
+        //String methodName = RegexUtl.find(storedProcName, "(?<=[.])\\b[\\w$]+\\b(?=\\s*[(;])", true);
+        String pkgName = null;
+        String methodName = null;
+        String[] storedProcNameParts = StringUtl.split(storedProcName, ".");
+        if(storedProcNameParts.length == 1)
+            methodName = storedProcNameParts[0];
+        if(storedProcNameParts.length == 2) {
+            pkgName    = storedProcNameParts[0];
+            methodName = storedProcNameParts[1];
+        }
         PackageName pkg = new OraUtils.PackageName(pkgName, methodName);
     	return pkg;
     }
@@ -51,43 +62,60 @@ public class OraUtils {
     }
 
 
+
     private static final String SQL_GET_PARAMS_FROM_DBMS = "select "+
-            " argument_name, position, sequence, data_type, in_out, data_length" +
-            " from user_arguments" +
-            " where package_name = upper(:package_name)" +
-            " and object_name = upper(:method_name)" +
+            " a.argument_name, a.position, a.sequence, a.data_type, a.in_out, a.data_length" +
+            " from user_arguments a" +
+            " where (:package_name is null or a.package_name = upper(:package_name))" +
+            " and a.object_name = upper(:method_name)" +
             " order by position";
     private static final String DEFAULT_PARAM_PREFIX = "P_";
-    public static String detectSQLParamsAuto(String sql, Connection conn) throws SQLException {
-
-        boolean isParamListAuto = RegexUtl.match(sql, "[(]\\s*[$]PRMLIST\\s*[)]", true).matches();
-
-        if(isParamListAuto) {
-            String[] execs = OraUtils.detectExecsOfStoredProcs(sql);
-            for (String t : execs) {
-                StringBuilder args = new StringBuilder();
-                OraUtils.PackageName pkg = OraUtils.detectAutoDBMSParamsParts(t);
-                try (OraclePreparedStatement st = (OraclePreparedStatement)conn.prepareStatement(SQL_GET_PARAMS_FROM_DBMS, ResultSet.TYPE_FORWARD_ONLY)) {
-                    st.setStringAtName("package_name", pkg.pkgName);
-                    st.setStringAtName("object_name", pkg.methodName);
-                    try (OracleResultSet rs = (OracleResultSet)st.executeQuery()) {
-                        while(rs.next()) {
-                            String parName = rs.getString("argument_name");
-                            if(!parName.startsWith(DEFAULT_PARAM_PREFIX))
-                                throw new IllegalArgumentException("Не верный формат наименования аргументов хранимой процедуры.\n" +
-                                        "Для использования автогенерации аргументов с помощью переменной $PRMLIST\n" +
-                                        "необходимо, чтобы все имена аргументов начинались с префикса " + DEFAULT_PARAM_PREFIX + " !");
-                            parName = parName.substring(2);
-                            args.append(((args.length() == 0) ? ":" : ",:") + parName);
-                        }
-                    }
+    public static String detectStoredProcParamsAuto(String storedProcName, Connection conn) throws SQLException {
+        StringBuilder args = new StringBuilder();
+        OraUtils.PackageName pkg = OraUtils.parsStoredProcName(storedProcName);
+        try (OraclePreparedStatement st = (OraclePreparedStatement)conn.prepareStatement(SQL_GET_PARAMS_FROM_DBMS, ResultSet.TYPE_FORWARD_ONLY)) {
+            st.setStringAtName("package_name", pkg.pkgName);
+            st.setStringAtName("method_name", pkg.methodName);
+            try (OracleResultSet rs = (OracleResultSet)st.executeQuery()) {
+                while(rs.next()) {
+                    String parName = rs.getString("argument_name");
+                    if(!parName.startsWith(DEFAULT_PARAM_PREFIX))
+                        throw new IllegalArgumentException("Не верный формат наименования аргументов хранимой процедуры.\n" +
+                                "Необходимо, чтобы все имена аргументов начинались с префикса " + DEFAULT_PARAM_PREFIX + " !");
+                    //parName = parName.substring(2);
+                    args.append(((args.length() == 0) ? ":" : ",:") + parName.toLowerCase());
                 }
-                String newExec = t;
-                newExec = RegexUtl.replace(newExec, "[(]\\s*[$]PRMLIST\\s*[)]", "(" + args + ")", true);
-                sql = sql.replaceAll(t, newExec);
             }
         }
-        return sql;
+        String newExec = storedProcName + "(" + args + ")";
+        return newExec;
+    }
+
+    public static List<String> extractParamNamesFromSQL(String sql) {
+//        LOG.debug("extractParamNamesFromSQL - start");
+//        LOG.debug("sql: " + sql);
+        List<String> rslt = new ArrayList();
+//        LOG.debug("Удаляем все строковые константы");
+        sql = RegexUtl.replace(sql, "(['])(.*?)\\1", "", true);
+//        LOG.debug("sql: " + sql);
+//        LOG.debug("Удаляем все многострочные коментарии");
+        sql = RegexUtl.replace(sql, "[/]\\*.*?\\*[/]", "", true);
+//        LOG.debug("sql: " + sql);
+
+//        LOG.debug("Удаляем все операторы присвоения");
+        sql = RegexUtl.replace(sql, ":=", "", true);
+//        LOG.debug("sql: " + sql);
+
+//        LOG.debug("Находим все параметры вида :qwe_ad");
+        Matcher m = RegexUtl.match(sql, "(?<=:)\\b[\\w\\#\\$]+", true);
+        while(m.find()) {
+            String parName = m.group();
+//            LOG.debug(" - parName["+m.start()+"]: " + parName);
+            if(rslt.indexOf(parName) == -1)
+                rslt.add(parName);
+        }
+//        LOG.debug("Найдено: " + rslt.size() + " параметров");
+        return rslt;
     }
 
 }

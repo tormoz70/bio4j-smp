@@ -25,4 +25,7 @@ public interface SQLCommand {
     void clearAfterEvents();
 
     void setSqlWrapper(SQLWrapper sqlWrapper);
+
+    String getPreparedSQL();
+
 }

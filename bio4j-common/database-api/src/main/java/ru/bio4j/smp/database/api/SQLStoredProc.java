@@ -11,7 +11,7 @@ import java.sql.Connection;
  * Time: 0:26
  * To change this template use File | Settings | File Templates.
  */
-public interface SQLStoredProc {
+public interface SQLStoredProc extends SQLCommand {
     boolean init(Connection conn, String storedProcName, Params params, int timeout);
     boolean init(Connection conn, String storedProcName, Params params);
     boolean execSQL(Params params);

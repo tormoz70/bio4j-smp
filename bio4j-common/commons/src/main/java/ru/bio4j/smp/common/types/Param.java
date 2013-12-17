@@ -123,7 +123,7 @@ public class Param implements Cloneable {
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(int id) {

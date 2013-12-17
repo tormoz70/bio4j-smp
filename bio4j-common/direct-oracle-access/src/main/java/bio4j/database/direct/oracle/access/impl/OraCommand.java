@@ -25,6 +25,7 @@ public abstract class OraCommand implements SQLCommand {
     protected OraclePreparedStatement preparedStatement = null;
     protected OracleResultSet resultSet = null;
     protected Exception lastError = null;
+    protected String preparedSQL = null;
 
     protected SQLWrapper sqlWrapper;
 
@@ -141,6 +142,7 @@ public abstract class OraCommand implements SQLCommand {
                 this.getBackOutParams(); // Вытаскиваем OUT-параметры
 
             } catch (Exception e) {
+                result = false;
                 this.lastError = e;
                 //LOG.error("Error on exec sql : [" + this.preparedSQL + "]", e);
                 this.doExecuteError(SQLCommandExecErrorEventAttrs.build(this.params, e));
@@ -222,5 +224,10 @@ public abstract class OraCommand implements SQLCommand {
         this.sqlWrapper = sqlWrapper;
     }
 
+
+    @Override
+    public String getPreparedSQL() {
+        return this.preparedSQL;
+    }
 
 }

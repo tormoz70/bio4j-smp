@@ -267,5 +267,9 @@ public class Utl {
                 return true;
         return false;
     }
+
+    public static <T> T nvl(T a, T b) {
+        return (a == null)?b:a;
+    }
 }
 
