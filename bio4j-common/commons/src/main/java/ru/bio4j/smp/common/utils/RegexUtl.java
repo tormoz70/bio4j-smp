@@ -23,7 +23,7 @@ public class RegexUtl {
 
     public static String find(String line, String regex, Boolean ignoreCase, boolean multiline, boolean dotall) {
         Matcher m = match(line, regex, ignoreCase, multiline, dotall);
-        return m.matches() ? m.group() : null;
+        return m.find() ? m.group() : null;
     }
     public static String find(String line, String regex, Boolean ignoreCase, boolean multiline) {
         return find(line, regex, ignoreCase, multiline, true);
@@ -37,7 +37,7 @@ public class RegexUtl {
 
     public static int pos(String line, String regex, Boolean ignoreCase, boolean multiline, boolean dotall) {
         Matcher m = match(line, regex, ignoreCase, multiline, dotall);
-        return m.matches() ? m.start() : -1;
+        return m.find() ? m.start() : -1;
     }
     public static int pos(String line, String regex, Boolean ignoreCase, boolean multiline) {
         return pos(line, regex, ignoreCase, multiline, true);

@@ -116,7 +116,7 @@ public abstract class OraCommand implements SQLCommand {
         }
     }
 
-    protected void doExecuteError(SQLCommandExecErrorEventAttrs attrs){
+    protected void doOnExecuteError(SQLCommandExecErrorEventAttrs attrs){
         if(this.execErrorEvents.size() > 0) {
             for(SQLCommandExecErrorEvent e : this.execErrorEvents)
                 e.handle(this, attrs);
@@ -145,7 +145,7 @@ public abstract class OraCommand implements SQLCommand {
                 result = false;
                 this.lastError = e;
                 //LOG.error("Error on exec sql : [" + this.preparedSQL + "]", e);
-                this.doExecuteError(SQLCommandExecErrorEventAttrs.build(this.params, e));
+                this.doOnExecuteError(SQLCommandExecErrorEventAttrs.build(this.params, e));
             }
             this.doAfterStatement(SQLCommandAfterEventAttrs.build( // Обрабатываем события
                     this.params, this.resultSet, this.lastError
