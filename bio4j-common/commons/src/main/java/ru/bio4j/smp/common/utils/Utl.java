@@ -102,6 +102,66 @@ public class Utl {
 //	    return classes;
 //	}
 
+    /**
+     * Вытаскивает имя вайла из полного пути
+     * @param filePath
+     * @return
+     */
+    public static String fileName(String filePath) {
+        if(StringUtl.isNullOrEmpty(filePath)){
+            int p = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+            if (p >= 0)
+                return filePath.substring(p+1);
+            return filePath;
+        }
+        return filePath;
+    }
+
+    /**
+     * Вытаскивает расширение файла из полного пути
+     * @param fileName
+     * @return
+     */
+    public static String fileExt(String fileName) {
+        String extension = "";
+
+        int i = fileName.lastIndexOf('.');
+        int p = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+
+        if (i > p) {
+            extension = fileName.substring(i+1);
+        }
+        return extension;
+    }
+
+    /**
+     * Приводит LongToInt, если это возможно
+     * @param l
+     * @return
+     */
+    public static int safeLongToInt(long l) {
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException
+                    (l + " cannot be cast to int without changing its value.");
+        }
+        return (int) l;
+    }
+
+    /**
+     * Читает из потока заданное кол-во байтов и возвращает их в виде массива
+     * @param in
+     * @param length
+     * @return
+     * @throws IOException
+     */
+    public static byte[] readStream(InputStream in, int length) throws IOException {
+        if (length > (Integer.MAX_VALUE - 5))
+            throw new IllegalArgumentException("Parameter \"length\" too big!");
+        byte[] buff = new byte[Utl.safeLongToInt(length)];
+        int readed = in.read(buff);
+        return buff;
+    }
+
 	/**
 	 * @param in
 	 * @return
