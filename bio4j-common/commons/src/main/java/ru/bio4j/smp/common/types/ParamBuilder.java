@@ -57,6 +57,7 @@ public class ParamBuilder {
 
 	public ParamBuilder value(Object value) {
 		this.value = value;
+
 		return this;
 	}
 

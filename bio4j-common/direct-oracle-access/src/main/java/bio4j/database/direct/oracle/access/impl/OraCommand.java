@@ -201,6 +201,8 @@ public abstract class OraCommand implements SQLCommand {
 
 	@Override
 	public Params getParams() {
+        if(this.params == null)
+            this.params = new Params();
 		return this.params;
 	}
 

@@ -226,7 +226,7 @@ public class Utl {
 	 * @param clazz - Annotated type
 	 * @return - Annotation object
 	 */
-	public static <T> T findAnnotation(Class<T> annotationType, Class<?> clazz) {
+	public static <T extends Annotation> T findAnnotation(Class<T> annotationType, Class<?> clazz) {
 		for (Annotation annotation : clazz.getDeclaredAnnotations()) {
 			Class<?> atype = annotation.annotationType();
 		    if(typesIsEquals(atype, annotationType))
@@ -234,6 +234,7 @@ public class Utl {
 		}
 		return null;
 	}
+
 
 	/**
 	 * @param packageName

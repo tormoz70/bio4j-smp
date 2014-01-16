@@ -65,11 +65,12 @@ public class OraUtils {
 
     private static final String SQL_GET_PARAMS_FROM_DBMS = "select "+
             " a.argument_name, a.position, a.sequence, a.data_type, a.in_out, a.data_length" +
-            " from user_arguments a" +
-            " where (:package_name is null or a.package_name = upper(:package_name))" +
+            " from ALL_ARGUMENTS a" +
+            " where a.owner = sys_context('userenv', 'current_schema')" +
+            " and (:package_name is null or a.package_name = upper(:package_name))" +
             " and a.object_name = upper(:method_name)" +
             " order by position";
-    private static final String DEFAULT_PARAM_PREFIX = "P_";
+    private static final String[] DEFAULT_PARAM_PREFIX = {"P_", "V_"};
     public static String detectStoredProcParamsAuto(String storedProcName, Connection conn) throws SQLException {
         StringBuilder args = new StringBuilder();
         OraUtils.PackageName pkg = OraUtils.parsStoredProcName(storedProcName);
@@ -79,9 +80,9 @@ public class OraUtils {
             try (OracleResultSet rs = (OracleResultSet)st.executeQuery()) {
                 while(rs.next()) {
                     String parName = rs.getString("argument_name");
-                    if(!parName.startsWith(DEFAULT_PARAM_PREFIX))
+                    if(!(parName.startsWith(DEFAULT_PARAM_PREFIX[0]) || parName.startsWith(DEFAULT_PARAM_PREFIX[1])))
                         throw new IllegalArgumentException("Не верный формат наименования аргументов хранимой процедуры.\n" +
-                                "Необходимо, чтобы все имена аргументов начинались с префикса " + DEFAULT_PARAM_PREFIX + " !");
+                                "Необходимо, чтобы все имена аргументов начинались с префикса \"" + DEFAULT_PARAM_PREFIX[0] + "\" или \"" + DEFAULT_PARAM_PREFIX[1] + "\" !");
                     //parName = parName.substring(2);
                     args.append(((args.length() == 0) ? ":" : ",:") + parName.toLowerCase());
                 }

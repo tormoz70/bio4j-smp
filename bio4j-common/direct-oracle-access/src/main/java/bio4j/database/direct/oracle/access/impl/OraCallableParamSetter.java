@@ -50,7 +50,7 @@ public class OraCallableParamSetter implements OraParamSetter {
                     outParams.add(param);
                 }
             } else
-                callable.setNull(paramName, Types.NULL);
+                throw new IllegalArgumentException("Parameter "+paramName+" not defined in input Params!");
         }
         for (Param outParam : outParams) {
             int sqlType = outParam.getSqlType();

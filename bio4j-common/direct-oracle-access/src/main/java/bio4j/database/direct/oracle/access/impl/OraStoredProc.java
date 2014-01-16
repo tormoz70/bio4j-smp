@@ -24,7 +24,7 @@ public class OraStoredProc extends OraCommand implements SQLStoredProc {
 	@Override
 	public boolean init(Connection conn, String storedProcName, Params params, int timeout) {
         this.storedProcName = storedProcName;
-		return super.init(conn, params, timeout) && this.prepareStatement();
+		return super.init(conn, params, timeout);
 	}
     @Override
     public boolean init(Connection conn, String storedProcName, Params params) {

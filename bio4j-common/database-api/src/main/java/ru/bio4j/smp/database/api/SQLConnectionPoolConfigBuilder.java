@@ -15,6 +15,7 @@ public class SQLConnectionPoolConfigBuilder {
     private int maxPoolSize = 10;
     private int connectionWaitTimeout = 5;
     private int initialPoolSize = 5;
+    private String currentSchema = null;
 
     public SQLConnectionPoolConfigBuilder dbConnectionUrl(String value) {
         this.dbConnectionUrl = value;
@@ -43,6 +44,11 @@ public class SQLConnectionPoolConfigBuilder {
     }
     public SQLConnectionPoolConfigBuilder initialPoolSize (int value) {
         this.initialPoolSize = value;
+        return this;
+    }
+
+    public SQLConnectionPoolConfigBuilder currentSchema (String value) {
+        this.currentSchema = value;
         return this;
     }
 
@@ -76,5 +82,10 @@ public class SQLConnectionPoolConfigBuilder {
 
     public int getInitialPoolSize() {
         return initialPoolSize;
+    }
+
+
+    public String getCurrentSchema() {
+        return currentSchema;
     }
 }

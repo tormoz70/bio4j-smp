@@ -12,6 +12,11 @@ import java.util.Calendar;
 public class ConverterTest {
 
     @Test
+    public void typeIsNumberTest() {
+        Assert.assertTrue(Converter.typeIsNumber(int.class));
+    }
+
+    @Test
     public void ConvertBigDecimal2Double() {
         try {
             BigDecimal inValue = new BigDecimal(123.654);

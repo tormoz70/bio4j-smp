@@ -3,6 +3,7 @@ package ru.bio4j.smp.common.utils;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
+import java.util.Arrays;
 
 /**
  * @author ayrat
@@ -10,7 +11,9 @@ import java.text.ParseException;
  */
 public class Converter {
 
-	public static Boolean typeIsNumber(Class<?> type) {
+	public static boolean typeIsNumber(Class<?> type) {
+        if(Arrays.asList(int.class, byte.class, short.class, long.class, float.class, double.class).contains(type))
+            return true;
 		return Number.class.isAssignableFrom(type);
 	}
 

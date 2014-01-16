@@ -1,13 +1,14 @@
 package bio4j.database.direct.oracle.access.impl;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import ru.bio4j.smp.common.utils.StringUtl;
 import ru.bio4j.smp.common.utils.Utl;
-import ru.bio4j.smp.database.api.SQLConnectionPool;
-import ru.bio4j.smp.database.api.SQLConnectionPoolConfig;
-import ru.bio4j.smp.database.api.SQLConnectionPoolStat;
+import ru.bio4j.smp.database.api.*;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceImpl;
 import org.slf4j.Logger;
@@ -18,8 +19,51 @@ public class OraConnectionPool implements SQLConnectionPool {
 
     private PoolDataSource cpool;
 
-    private OraConnectionPool(PoolDataSource cpool) {
+    private final List<SQLConnectionAfterEvent> afterEvents = new ArrayList<>();
+    private final List<SQLConnectionAfterEvent> innerAfterEvents = new ArrayList<>();
+
+    private final SQLConnectionPoolConfig config;
+
+    private OraConnectionPool(PoolDataSource cpool, SQLConnectionPoolConfig config) {
         this.cpool = cpool;
+        this.config = config;
+        if(this.config.getCurrentSchema() != null) {
+            this.innerAfterEvents.add(
+                    new SQLConnectionAfterEvent() {
+                        @Override
+                        public void handle(SQLConnectionPool sender, SQLConnectionAfterEventAttrs attrs) throws SQLException {
+                            if(attrs.getConnection() != null) {
+                                String curSchema = OraConnectionPool.this.config.getCurrentSchema().toUpperCase();
+                                LOG.debug("onAfterGetConnection - start setting current_schema="+curSchema);
+                                CallableStatement cs1 = attrs.getConnection().prepareCall( "alter session set current_schema="+curSchema);
+                                cs1.execute();
+                                LOG.debug("onAfterGetConnection - OK. current_schema now is "+curSchema);
+                            }
+                        }
+                    }
+            );
+        }
+    }
+
+    @Override
+    public void addAfterEvent(SQLConnectionAfterEvent e) {
+        this.afterEvents.add(e);
+    }
+
+    @Override
+    public void clearAfterEvents() {
+        this.afterEvents.clear();
+    }
+
+    private void doAfterConnect(SQLConnectionAfterEventAttrs attrs) throws SQLException {
+        if(this.innerAfterEvents.size() > 0) {
+            for(SQLConnectionAfterEvent e : this.innerAfterEvents)
+                e.handle(this, attrs);
+        }
+        if(this.afterEvents.size() > 0) {
+            for(SQLConnectionAfterEvent e : this.afterEvents)
+                e.handle(this, attrs);
+        }
     }
 
     public static OraConnectionPool create(String poolName, SQLConnectionPoolConfig config) throws SQLException {
@@ -28,6 +72,7 @@ public class OraConnectionPool implements SQLConnectionPool {
         PoolDataSource pool = new PoolDataSourceImpl();
         pool.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
         pool.setURL(config.getDbConnectionUrl());
+        pool.setConnectionProperty("autoCommit", "false");
 
         pool.setUser(config.getDbConnectionUsr());
         pool.setPassword(config.getDbConnectionPwd());
@@ -36,28 +81,31 @@ public class OraConnectionPool implements SQLConnectionPool {
         pool.setMaxPoolSize(config.getMaxPoolSize());
         pool.setConnectionWaitTimeout(config.getConnectionWaitTimeout());
         pool.setInitialPoolSize(config.getInitialPoolSize());
-        return new OraConnectionPool(pool);
+
+        return new OraConnectionPool(pool, config);
     }
 
     public void Close(){
         //
     }
 
+
+
 	@Override
-	public Connection getConnection(String userName, String password) {
-        try {
-            if(StringUtl.isNullOrEmpty(userName))
-                return this.cpool.getConnection();
-            else
-                return this.cpool.getConnection(userName, password);
-        } catch (SQLException ex) {
-            LOG.error("Error!!!", ex);
-            return null;
-        }
+	public Connection getConnection(String userName, String password) throws SQLException {
+        Connection conn = null;
+
+        if(StringUtl.isNullOrEmpty(userName))
+            conn = this.cpool.getConnection();
+        else
+            conn = this.cpool.getConnection(userName, password);
+
+        this.doAfterConnect(SQLConnectionAfterEventAttrs.build(conn));
+        return conn;
 	}
 
     @Override
-    public Connection getConnection() {
+    public Connection getConnection() throws SQLException {
         return getConnection(null, null);
     }
 

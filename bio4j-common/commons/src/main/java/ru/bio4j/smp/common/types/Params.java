@@ -98,7 +98,7 @@ public class Params implements Iterable<Param> {
 	public Params add(Param item, Boolean replaceIfExists) {
 		if (item != null) {
 			if (!this.alredyExists(item.getName(), replaceIfExists))
-				this.innerParams.add(item);
+                this.innerParams.add(item);
 		}
 		return this;
 	}
@@ -110,8 +110,8 @@ public class Params implements Iterable<Param> {
 
 	public Params add(String name, Object value, Boolean replaceIfExists) {
 		if (!StringUtl.isNullOrEmpty(name)) {
-			if (!this.alredyExists(name, replaceIfExists))
-				this.innerParams.add(new ParamBuilder(this).name(name).value(value).build());
+            Class<?> type = (value != null) ? value.getClass() : null;
+			this.add(new ParamBuilder(this).name(name).value(value).type(type).build(), replaceIfExists);
 		}
 		return this;
 	}
@@ -121,7 +121,8 @@ public class Params implements Iterable<Param> {
 	}
 
 	public Params add(String name, Object value, Object innerObject) {
-		return this.add(new ParamBuilder(this).name(name).value(value).innerObject(innerObject).build(), false);
+        Class<?> type = (value != null) ? value.getClass() : null;
+		return this.add(new ParamBuilder(this).name(name).value(value).type(type).innerObject(innerObject).build(), false);
 	}
 
 	public Params merge(Params params, Boolean overwrite) {

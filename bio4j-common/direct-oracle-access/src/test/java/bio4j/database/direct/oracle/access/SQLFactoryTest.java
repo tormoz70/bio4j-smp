@@ -3,6 +3,7 @@ package bio4j.database.direct.oracle.access;
 import ru.bio4j.smp.common.types.Direction;
 import ru.bio4j.smp.common.types.ParamBuilder;
 import ru.bio4j.smp.common.types.Params;
+import ru.bio4j.smp.common.utils.ConvertValueException;
 import ru.bio4j.smp.common.utils.Utl;
 import ru.bio4j.smp.database.api.SQLCursor;
 import ru.bio4j.smp.database.api.SQLConnectionPool;
@@ -24,6 +25,7 @@ public class SQLFactoryTest {
     private static final Logger LOG = LoggerFactory.getLogger(SQLFactoryTest.class);
     private static final String testDBUrl = "jdbc:oracle:thin:@192.168.50.32:1521:EKBDB";
     //private static final String testDBUrl = "jdbc:oracle:oci:@GIVCDB_EKBS03";
+    //private static final String testDBUrl = "jdbc:oracle:thin:@https://databasetrial0901-rugivcmkrftrial07058.db.em1.oraclecloudapps.com/apex:1521:databasetrial0901";
     private static final String testDBUsr = "GIVCAS";
     private static final String testDBPwd = "qwe";
 
@@ -36,12 +38,15 @@ public class SQLFactoryTest {
                         .dbConnectionUrl(testDBUrl)
                         .dbConnectionUsr(testDBUsr)
                         .dbConnectionPwd(testDBPwd)
+                        //.currentSchema("GIVCAPI")
                         .build()
         );
         try {
             try (Connection conn = pool.getConnection()) {
-                CallableStatement cs = conn.prepareCall( "create or replace procedure test_stored_prop(p_param1 in varchar2, p_param2 out number) is begin p_param2 := length(p_param1); end;");
-                cs.execute();
+                CallableStatement cs1 = conn.prepareCall( "create table test_tbl(fld1 varchar2(10), fld2 number)");
+                cs1.execute();
+                CallableStatement cs2 = conn.prepareCall( "create or replace procedure test_stored_prop(p_param1 in varchar2, p_param2 out number) is begin insert into test_tbl values('test', 1); p_param2 := length(p_param1); end;");
+                cs2.execute();
             }
         } catch (SQLException ex) {
             LOG.error("Error!", ex);
@@ -50,7 +55,16 @@ public class SQLFactoryTest {
 
     @AfterTest
     public static void finClass() throws Exception {
-        //pool.
+        try {
+            try (Connection conn = pool.getConnection()) {
+                CallableStatement cs1 = conn.prepareCall( "drop procedure test_stored_prop");
+                cs1.execute();
+                CallableStatement cs2 = conn.prepareCall( "drop table test_tbl");
+                cs2.execute();
+            }
+        } catch (SQLException ex) {
+            LOG.error("Error!", ex);
+        }
     }
 
     @Test
@@ -107,6 +121,7 @@ public class SQLFactoryTest {
                         LOG.error("Error!", ex);
                         Assert.fail();
                     }
+                    conn.rollback();
                 } else {
                     LOG.error("Error!", cmd.getLastError());
                     Assert.fail();
@@ -118,6 +133,42 @@ public class SQLFactoryTest {
         } catch (SQLException ex) {
             LOG.error("Error!", ex);
             Assert.fail();
+        }
+    }
+
+    private static <T> T getParamValue(Params params, Class<T> type, String paramName) throws SQLException {
+        try {
+            return params.getValueByName(type, paramName, true);
+        } catch (ConvertValueException ex) {
+            throw new SQLException(ex);
+        }
+    }
+
+    @Test(enabled = false)
+    public void testSQLCommandStoredProc() {
+        try {
+            int role = -1;
+            int org_id = -1;
+            try (Connection conn = pool.getConnection()) {
+                    SQLStoredProc prc = OraFactory.CreateSQLStoredProc();
+                    Params params = prc.getParams();
+                    params.add("p_user_name", "coordinator")
+                          .add("p_password", "siolopon")
+                          .add(new ParamBuilder(params).name("v_role_id").type(int.class).direction(Direction.Output).build())
+                          .add(new ParamBuilder(params).name("v_org_id").type(int.class).direction(Direction.Output).build());
+                    if(prc.init(conn, "gacc.check_login", params)) {
+                        if(prc.execSQL()) {
+                            role = getParamValue(params, int.class, "v_role_id");
+                            org_id = getParamValue(params, int.class, "v_org_id");
+                            LOG.debug(String.format("Login: OK; role: %d; org_id: %d", role, org_id));
+                        } else
+                            throw new SQLException(prc.getLastError());
+                    } else
+                        throw new SQLException(prc.getLastError());
+            }
+            Assert.assertEquals(role, 6);
+        } catch (SQLException ex) {
+            LOG.error("Error!!!", ex);
         }
     }
 
