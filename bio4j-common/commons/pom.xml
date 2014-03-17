@@ -5,11 +5,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>ru.bio4j.smp</groupId>
-		<artifactId>common</artifactId>
-		<version>1.0-SNAPSHOT</version>
+		<artifactId>bio4j-smp-common</artifactId>
+		<version>2.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>bio4j-smp-commons</artifactId>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
     <build>
         <plugins>
             <plugin>

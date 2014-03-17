@@ -1,7 +1,6 @@
-package bio4j.database.direct.oracle.access;
+package ru.bio4j.smp.database.direct.oracle.access;
 
-import bio4j.database.direct.oracle.access.impl.OraCallableParamSetter;
-import bio4j.database.direct.oracle.access.impl.OraUtils;
+import ru.bio4j.smp.database.direct.oracle.access.impl.OraUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

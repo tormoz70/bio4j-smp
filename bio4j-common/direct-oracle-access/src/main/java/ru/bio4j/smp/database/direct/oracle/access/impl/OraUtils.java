@@ -1,4 +1,4 @@
-package bio4j.database.direct.oracle.access.impl;
+package ru.bio4j.smp.database.direct.oracle.access.impl;
 
 import ru.bio4j.smp.common.utils.RegexUtl;
 import ru.bio4j.smp.common.utils.StringUtl;

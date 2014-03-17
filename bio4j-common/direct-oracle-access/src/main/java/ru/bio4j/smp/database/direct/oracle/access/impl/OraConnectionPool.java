@@ -1,4 +1,4 @@
-package bio4j.database.direct.oracle.access.impl;
+package ru.bio4j.smp.database.direct.oracle.access.impl;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -99,7 +99,6 @@ public class OraConnectionPool implements SQLConnectionPool {
             conn = this.cpool.getConnection();
         else
             conn = this.cpool.getConnection(userName, password);
-
         this.doAfterConnect(SQLConnectionAfterEventAttrs.build(conn));
         return conn;
 	}

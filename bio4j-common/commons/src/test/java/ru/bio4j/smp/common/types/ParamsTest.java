@@ -192,4 +192,13 @@ public class ParamsTest {
 	public void toMap() {
 		throw new RuntimeException("Test not implemented");
 	}
+
+    @Test(enabled = false)
+    public void getParamValueTest() throws Exception {
+        Params params = new Params();
+        ParamBuilder pb = new ParamBuilder(params);
+        params.add(pb.name("v_packetzip_id").type(int.class).direction(Direction.Output).build());
+        int org = Params.getParamValue(params, int.class, "v_role_id");
+    }
+
 }

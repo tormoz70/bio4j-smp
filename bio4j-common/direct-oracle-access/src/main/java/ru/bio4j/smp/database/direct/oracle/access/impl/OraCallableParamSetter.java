@@ -1,20 +1,16 @@
-package bio4j.database.direct.oracle.access.impl;
+package ru.bio4j.smp.database.direct.oracle.access.impl;
 
 import ru.bio4j.smp.common.types.Direction;
 import ru.bio4j.smp.common.types.Param;
 import ru.bio4j.smp.common.types.Params;
-import ru.bio4j.smp.common.utils.RegexUtl;
-import oracle.jdbc.OraclePreparedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 /**
  * Засовывает значения из params в CallableStatement

@@ -1,4 +1,4 @@
-package bio4j.database.direct.oracle.access.impl;
+package ru.bio4j.smp.database.direct.oracle.access.impl;
 
 import oracle.jdbc.*;
 import org.slf4j.Logger;
@@ -10,10 +10,9 @@ import ru.bio4j.smp.common.utils.Converter;
 import ru.bio4j.smp.common.utils.StringUtl;
 import ru.bio4j.smp.database.api.*;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.IOException;
+import java.io.Reader;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.Map;
 /**
  * Реализует 3 основных вида запроса Query, Exec, Scalar
  */
-public class OraCursor extends OraCommand implements SQLCursor {
+public class OraCursor extends OraCommand<SQLCursor> implements SQLCursor {
     private static final Logger LOG = LoggerFactory.getLogger(OraCursor.class);
 
     public static final int FETCH_ROW_LIMIT = 10*10^6; // Максимальное кол-во записей, которое может вернуть запрос к БД (10 млн)
@@ -36,55 +35,50 @@ public class OraCursor extends OraCommand implements SQLCursor {
 	}
 
 	@Override
-	public boolean init(Connection conn, String sql, Params params, int timeout) {
+	public SQLCursor init(Connection conn, String sql, Params params, int timeout) throws SQLException {
         this.sql = sql;
-		return super.init(conn, params, timeout) && this.prepareStatement();
+		return super.init(conn, params, timeout);
 	}
 
     @Override
-    public boolean init(Connection conn, String sql, Params params) {
+    public SQLCursor init(Connection conn, String sql, Params params) throws SQLException {
         return this.init(conn, sql, params, 60);
     }
 
     @Override
-	protected boolean prepareStatement() {
-        try {
-            this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.sql) : this.sql;
-            this.preparedStatement = (OraclePreparedStatement)this.connection.prepareStatement(this.preparedSQL, ResultSet.TYPE_FORWARD_ONLY);
-            this.preparedStatement.setQueryTimeout(this.timeout);
-            return true;
-        } catch (SQLException ex) {
-            this.lastError = ex;
-            LOG.error("Error!!!", ex);
-            return false;
-        }
+	protected void prepareStatement() throws SQLException {
+        this.preparedSQL = (this.sqlWrapper != null) ? this.sqlWrapper.prepare(this.sql) : this.sql;
+        this.preparedStatement = (OraclePreparedStatement)this.connection.prepareStatement(this.preparedSQL, ResultSet.TYPE_FORWARD_ONLY);
+        this.preparedStatement.setQueryTimeout(this.timeout);
 	}
 
 
     @Override
-    protected void resetCommand() {
+    protected void resetCommand() throws SQLException {
         super.resetCommand();
-        if (this.isActive())
-            this.closeCursor();
+        if (this.isActive()){
+            try {
+                this.close();
+            } catch (Exception e) {}
+        }
         this.currentFetchedRowPosition = 0L;
     }
 
 	@Override
-	public boolean openCursor(Params params) {
-        return (boolean)this.processStatement(params, new DelegateSQLAction<Boolean>() {
+	public SQLCursor open(Params params) throws SQLException {
+        return (SQLCursor)this.processStatement(params, new DelegateSQLAction() {
             @Override
-            public Boolean execute() throws SQLException {
+            public void execute() throws SQLException {
                 final OraCursor self = OraCursor.this;
                 self.resultSet = (OracleResultSet)self.preparedStatement.executeQuery();
                 self.isActive = true;
-                return true;
             }
         });
 	}
 
     @Override
-    public boolean openCursor() {
-        return this.openCursor(null);
+    public SQLCursor open() throws SQLException {
+        return this.open(null);
     }
 
 
@@ -109,41 +103,29 @@ public class OraCursor extends OraCommand implements SQLCursor {
 //        return this.execScalar(clazz, null);
 //    }
 
-
-	@Override
-	public boolean closeCursor() {
-		this.isActive = false;
-        this.cancel();
-        if (this.lastError != null)
-            return false;
-        final Statement stmnt = this.getStatement();
-        if(stmnt != null) {
+    private static String readClob(Clob clob) throws SQLException {
+        String result = null;
+        Reader is = clob.getCharacterStream();
+//        InputStreamReader is = new InputStreamReader(clob.getAsciiStream(), Charset.defaultCharset());
+        StringBuffer sb = new StringBuffer();
+        int length = (int) clob.length();
+        if (length > 0) {
+            char[] buffer = new char[length];
             try {
-                stmnt.close();
-                return true;
-            } catch (SQLException ex) {
-                this.lastError = ex;
-                return false;
+                while (is.read(buffer) != -1)
+                    sb.append(buffer);
+                result = new String(sb);
+            } catch (IOException e) {
+                new SQLException(e);
             }
         }
-        final ResultSet rsltSet = this.resultSet;
-        if(rsltSet != null) {
-            try {
-                rsltSet.close();
-                return true;
-            } catch (SQLException ex) {
-                this.lastError = ex;
-                return false;
-            }
-        }
-        this.row = null;
-        return true;
-	}
+        return result;
+    }
 
     private Map<String, Field> row;
     private List<Object> rowValues;
 
-    private boolean readRow(ResultSet resultSet) throws SQLException {
+    private void readRow(ResultSet resultSet) throws SQLException {
         if(this.row == null) {
             OracleResultSetMetaData metadata = (OracleResultSetMetaData)resultSet.getMetaData();
             this.rowValues = new ArrayList<Object>(metadata.getColumnCount());
@@ -156,38 +138,35 @@ public class OraCursor extends OraCommand implements SQLCursor {
                 try {
                     type = getClass().getClassLoader().loadClass(metadata.getColumnClassName(i));
                 } catch (ClassNotFoundException ex) {
-                    this.lastError = ex;
-                    LOG.error("Error!", ex);
-                    return false;
+                    throw new SQLException(ex);
                 }
                 String fieldName =  metadata.getColumnName(i);
-                int fieldType = metadata.getColumnType(i);
-                Field field = new FieldImpl(type, i, fieldName, fieldType);
+                int sqlType = metadata.getColumnType(i);
+                Field field = new FieldImpl(type, i, fieldName, sqlType);
                 this.row.put(fieldName, field);
             }
         }
         for (Field field : this.row.values()) {
             int valueIndex = field.getId() - 1;
-            this.rowValues.set(valueIndex, resultSet.getObject(field.getId()));
+            Object value;
+            if(field.getType() == oracle.jdbc.OracleClob.class){
+                value = readClob(resultSet.getClob(field.getId()));
+            } else if(field.getType() == oracle.jdbc.OracleBlob.class){
+                value = resultSet.getBytes(field.getId());
+            } else
+                value = resultSet.getObject(field.getId());
+            this.rowValues.set(valueIndex, value);
         }
-        return true;
     }
 
 	@Override
-	public boolean next() {
-        boolean rslt = (this.lastError == null);
-        if(!rslt) return false;
+	public boolean next() throws SQLException {
+        boolean rslt = false;
 		if (this.resultSet != null) {
-            try {
-                rslt = this.resultSet.next();
-                if(rslt)
-                   this.readRow(this.resultSet);
+            rslt = this.resultSet.next();
+            if(rslt)
+               this.readRow(this.resultSet);
 
-            } catch (Exception ex) {
-                LOG.error("Error!!!", ex);
-                this.lastError = ex;
-                rslt = false;
-            }
         }
 		return rslt;
 	}
@@ -212,11 +191,6 @@ public class OraCursor extends OraCommand implements SQLCursor {
 		return this.currentFetchedRowPosition;
 	}
 
-	@Override
-	public Exception getLastError() {
-		return this.lastError;
-	}
-
     public void setSqlWrapper(SQLWrapper sqlWrapper) {
         this.sqlWrapper = sqlWrapper;
     }
@@ -235,59 +209,62 @@ public class OraCursor extends OraCommand implements SQLCursor {
     private final String EXMSG_ParamIsNull = "Обязательный параметр [%s] пуст!";
 
     @Override
-    public <T> T getValue(Class<T> type, int fieldId) {
+    public <T> T getValue(Class<T> type, int fieldId) throws SQLException {
         if((fieldId > 0) && (fieldId <= this.rowValues.size())) {
             try {
                 return Converter.toType(this.rowValues.get(fieldId - 1), type);
-            } catch (ConvertValueException ex) {
-                this.lastError = ex;
-                LOG.error("Error!", ex);
-                return null;
+            } catch (ConvertValueException e) {
+                throw new SQLException(e);
             }
-        } else {
-            this.lastError = new IllegalArgumentException(String.format(EXMSG_IndexOutOfBounds, fieldId));
-            return null;
-        }
+        } else
+            throw new IllegalArgumentException(String.format(EXMSG_IndexOutOfBounds, fieldId));
     }
 
     @Override
-    public <T> T getValue(Class<T> type, String fieldName) {
-        if(StringUtl.isNullOrEmpty(fieldName)) {
-            this.lastError = new IllegalArgumentException(String.format(EXMSG_ParamIsNull, "fieldName"));
-            return null;
-        }
+    public <T> T getValue(Class<T> type, String fieldName) throws SQLException {
+        if(StringUtl.isNullOrEmpty(fieldName))
+            throw new IllegalArgumentException(String.format(EXMSG_ParamIsNull, "fieldName"));
+
         Field fld = this.row.get(fieldName.toUpperCase());
         if(fld != null)
             return getValue(type, fld.getId());
-        else {
-            this.lastError = new IllegalArgumentException(String.format(EXMSG_FieldNotFound, fieldName));
-            return null;
-        }
+        else
+            throw new IllegalArgumentException(String.format(EXMSG_FieldNotFound, fieldName));
     }
 
     @Override
     public Object getValue(int fieldId) {
         if((fieldId > 0) && (fieldId <= this.rowValues.size()))
             return this.rowValues.get(fieldId - 1);
-        else {
-            this.lastError = new IllegalArgumentException(String.format(EXMSG_IndexOutOfBounds, fieldId));
-            return null;
-        }
+        else
+            throw new IllegalArgumentException(String.format(EXMSG_IndexOutOfBounds, fieldId));
     }
 
     @Override
     public Object getValue(String fieldName) {
-        if(StringUtl.isNullOrEmpty(fieldName)) {
-            this.lastError = new IllegalArgumentException(String.format(EXMSG_ParamIsNull, "fieldName"));
-            return null;
-        }
+        if(StringUtl.isNullOrEmpty(fieldName))
+            throw new IllegalArgumentException(String.format(EXMSG_ParamIsNull, "fieldName"));
+
         Field fld = this.row.get(fieldName.toUpperCase());
         if(fld != null)
             return getValue(fld.getId());
-        else {
-            this.lastError = new IllegalArgumentException(String.format(EXMSG_FieldNotFound, fieldName));
-            return null;
-        }
+        else
+            throw new IllegalArgumentException(String.format(EXMSG_FieldNotFound, fieldName));
+
     }
 
+    @Override
+    public void close() throws Exception {
+        this.isActive = false;
+        this.row = null;
+        this.cancel();
+        final Statement stmnt = this.getStatement();
+        if(stmnt != null)
+            stmnt.close();
+
+        final ResultSet rsltSet = this.resultSet;
+        if(rsltSet != null)
+            rsltSet.close();
+
+    }
 }

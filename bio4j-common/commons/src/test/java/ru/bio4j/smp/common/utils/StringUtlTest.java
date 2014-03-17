@@ -48,4 +48,11 @@ public class StringUtlTest {
 		Assert.assertEquals(StringUtl.isNullOrEmpty(""), true);
 		Assert.assertEquals(StringUtl.isNullOrEmpty("qwe"), false);
 	}
+
+    @Test
+    public void combineArrayTest() {
+        int[] a = {1,2,3,4,5};
+        String lst = StringUtl.combineArray(a, ";");
+        Assert.assertEquals(lst, "1;2;3;4;5");
+    }
 }

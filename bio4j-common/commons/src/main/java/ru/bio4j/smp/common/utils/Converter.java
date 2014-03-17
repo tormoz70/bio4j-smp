@@ -189,6 +189,9 @@ public class Converter {
 
 				} else if (targetType == String.class) {
 					return (T) inValue;
+                } else if (targetType == byte[].class) {
+                    if (inType == String.class)
+                        return (T)((String)inValue).getBytes();
 				}
 			}
 

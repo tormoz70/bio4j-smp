@@ -6,15 +6,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -331,6 +329,10 @@ public class Utl {
 
     public static <T> T nvl(T a, T b) {
         return (a == null)?b:a;
+    }
+
+    public static Object cloneBean(Object bean) throws Exception {
+        return BeanUtils.cloneBean(bean);
     }
 }
 

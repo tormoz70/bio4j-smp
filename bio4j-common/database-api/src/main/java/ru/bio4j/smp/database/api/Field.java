@@ -4,9 +4,9 @@ public interface Field {
 
 	String getName();
 
-	int getDataType();
+	int getSqlType();
 
-	Class<?> getJavaType();
+	Class<?> getType();
 
 	Integer getId();
 	

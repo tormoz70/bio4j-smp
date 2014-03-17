@@ -3,6 +3,8 @@ package ru.bio4j.smp.common.utils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.regex.Matcher;
+
 public class UtlTest {
 
     @Test
@@ -39,4 +41,16 @@ public class UtlTest {
         System.out.println(info);
         Assert.assertEquals(info, rslt);
     }
+
+    @Test(enabled = false)
+    public void regexFindTest() {
+        String txt = "ORA-20001: Не верное имя или пароль пользователя!\n" +
+                "ORA-06512: на  \"GIVCAPI.GACC\", line 316\n" +
+                "ORA-06512: на  \"GIVCAPI.GACC\", line 331\n" +
+                "ORA-06512: на  line 1";
+        Matcher m = RegexUtl.match(txt, "(?<=ORA-2\\d{4}:).+(?=\\nORA-\\d{5}:)", true, true, true);
+        String fnd = m.group();
+        System.out.println(fnd);
+    }
+
 }

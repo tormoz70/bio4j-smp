@@ -1,4 +1,4 @@
-package bio4j.database.direct.oracle.access.impl;
+package ru.bio4j.smp.database.direct.oracle.access.impl;
 
 import ru.bio4j.smp.database.api.Field;
 import org.slf4j.Logger;
@@ -17,17 +17,17 @@ public class FieldImpl implements Field {
 
     private String name;
     private Class<?> type;
-    private int dataType;
+    private int sqlType;
     private int id;
 
     private String caption;
     private int pkIndex;
 
-    public FieldImpl(Class<?> type, int id, String name, int dataType) {
+    public FieldImpl(Class<?> type, int id, String name, int sqlType) {
         this.id = id;
         this.type = type;
         this.name = name.toUpperCase();
-        this.dataType = dataType;
+        this.sqlType = sqlType;
     }
 
     @Override
@@ -36,12 +36,12 @@ public class FieldImpl implements Field {
     }
 
     @Override
-    public int getDataType() {
-        return this.dataType;
+    public int getSqlType() {
+        return this.sqlType;
     }
 
     @Override
-    public Class<?> getJavaType() {
+    public Class<?> getType() {
         return this.type;
     }
 

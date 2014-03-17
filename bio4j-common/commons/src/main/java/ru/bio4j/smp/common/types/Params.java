@@ -2,6 +2,7 @@ package ru.bio4j.smp.common.types;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -282,4 +283,17 @@ public class Params implements Iterable<Param> {
         this.sqlTypeConverter = sqlTypeConverter;
     }
 
+    public static <T> T getParamValue(Params params, Class<T> type, String paramName) throws ConvertValueException {
+        if(params == null)
+            throw new IllegalArgumentException("Parameter \"params\" can't be null!");
+        Param param = params.getParam(paramName, true);
+        if (param != null)
+            return param.getValue(type);
+        throw new IllegalArgumentException(String.format("Param \"%s\" not found in collection \"params\"!", paramName));
+    }
+
+    private ParamBuilder paramBuilder = new ParamBuilder(this);
+    public ParamBuilder builder() {
+        return paramBuilder;
+    }
 }

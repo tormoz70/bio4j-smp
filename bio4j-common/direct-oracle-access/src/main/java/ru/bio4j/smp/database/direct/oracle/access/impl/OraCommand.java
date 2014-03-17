@@ -1,4 +1,4 @@
-package bio4j.database.direct.oracle.access.impl;
+package ru.bio4j.smp.database.direct.oracle.access.impl;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.List;
 
 import oracle.jdbc.*;
 import ru.bio4j.smp.common.types.DelegateSQLAction;
+import ru.bio4j.smp.common.types.Param;
 import ru.bio4j.smp.common.types.Params;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,7 @@ import ru.bio4j.smp.database.api.*;
 /**
  * Базовый класс
  */
-public abstract class OraCommand implements SQLCommand {
+public abstract class OraCommand <T extends SQLCommand> implements SQLCommand {
     private static final Logger LOG = LoggerFactory.getLogger(OraCommand.class);
 
 	public static final int ORAERRCODE_APP_ERR_START = 20000; // начало диапазона кодов ошибок приложения в Oracle
@@ -24,7 +25,6 @@ public abstract class OraCommand implements SQLCommand {
     protected OracleConnection connection = null;
     protected OraclePreparedStatement preparedStatement = null;
     protected OracleResultSet resultSet = null;
-    protected Exception lastError = null;
     protected String preparedSQL = null;
 
     protected SQLWrapper sqlWrapper;
@@ -36,7 +36,6 @@ public abstract class OraCommand implements SQLCommand {
 
     protected List<SQLCommandBeforeEvent> beforeEvents = new ArrayList<>();
     protected List<SQLCommandAfterEvent> afterEvents = new ArrayList<>();
-    protected List<SQLCommandExecErrorEvent> execErrorEvents = new ArrayList<>();
 
     @Override
     public void addBeforeEvent(SQLCommandBeforeEvent e) {
@@ -82,20 +81,20 @@ public abstract class OraCommand implements SQLCommand {
         this.paramGetter = paramGetter;
     }
 
-	public boolean init(Connection conn, Params params, int timeout) {
+	public T init(Connection conn, Params params, int timeout) throws SQLException {
 		this.connection = (OracleConnection)conn;
-		this.lastError = null;
 		this.timeout = timeout;
 		this.params = params;
-		return this.prepareStatement();
+        this.prepareStatement();
+		return (T)this;
 	}
-    public boolean init(Connection conn, Params params) {
+    public T init(Connection conn, Params params) throws SQLException {
         return this.init(conn, params, 60);
     }
 
-	protected abstract boolean prepareStatement();
+	protected abstract void prepareStatement() throws SQLException;
 
-    protected boolean doBeforeStatement(Params params){
+    protected boolean doBeforeStatement(Params params) throws SQLException {
         boolean locCancel = false;
         if(this.beforeEvents.size() > 0) {
             for(SQLCommandBeforeEvent e : this.beforeEvents){
@@ -105,7 +104,7 @@ public abstract class OraCommand implements SQLCommand {
             }
         }
         if(locCancel)
-            this.lastError = new SQLException("Command has been canceled!");
+            throw new SQLException("Command has been canceled!");
         return !locCancel;
 	}
 
@@ -116,47 +115,50 @@ public abstract class OraCommand implements SQLCommand {
         }
     }
 
-    protected void doOnExecuteError(SQLCommandExecErrorEventAttrs attrs){
-        if(this.execErrorEvents.size() > 0) {
-            for(SQLCommandExecErrorEvent e : this.execErrorEvents)
-                e.handle(this, attrs);
-        }
-    }
-
-    protected <T> Object processStatement(Params params, DelegateSQLAction<T> action) {
-        Object result = false;
+    protected T processStatement(Params params, DelegateSQLAction action) throws SQLException {
+        SQLException lastError = null;
         try {
             try {
                 this.resetCommand(); // Сбрасываем состояние
 
-                this.params = this.params.merge(params, true); // Объединяем параметры
+                // Объединяем параметры
+                if(this.params == null)
+                    this.params = new Params();
+                if(params != null)
+                    this.params = this.params.merge(params, true);
 
                 if(!this.doBeforeStatement(this.params)) // Обрабатываем события
-                    return result;
+                    return (T)this;
 
                 this.setParamsToStatement(); // Применяем параметры
 
                 if (action != null)
-                    result = action.execute(); // Выполняем команду
+                    action.execute(); // Выполняем команду
 
                 this.getBackOutParams(); // Вытаскиваем OUT-параметры
 
-            } catch (Exception e) {
-                result = false;
-                this.lastError = e;
-                //LOG.error("Error on exec sql : [" + this.preparedSQL + "]", e);
-                this.doOnExecuteError(SQLCommandExecErrorEventAttrs.build(this.params, e));
+            } catch (SQLException e) {
+//                if(LOG.isDebugEnabled()){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("{OraCommand.Params(before exec): {\n");
+                    for (Param p : this.params)
+                        sb.append("\t"+p.toString()+",\n");
+                    sb.append("}}");
+//                    LOG.debug(sb.toString());
+//                }
+                lastError = new SQLExceptionExt(String.format("%s:\n - sql: %s;\n - %s", "Error on execute command", this.preparedSQL, sb.toString()), e);
+                throw lastError;
             }
-            this.doAfterStatement(SQLCommandAfterEventAttrs.build( // Обрабатываем события
-                    this.params, this.resultSet, this.lastError
-            ));
         } finally {
-            return result; // Возвращаем результат
+
+            this.doAfterStatement(SQLCommandAfterEventAttrs.build( // Обрабатываем события
+                    this.params, this.resultSet, lastError
+            ));
         }
+        return (T)this;
     }
 
-    protected void resetCommand() {
-        this.lastError = null;
+    protected void resetCommand() throws SQLException {
     }
 
 
@@ -183,20 +185,10 @@ public abstract class OraCommand implements SQLCommand {
 //    }
 
 	@Override
-	public boolean cancel() {
-        if (this.lastError != null)
-            return false;
+	public void cancel() throws SQLException {
         final Statement stmnt = this.getStatement();
-        if(stmnt != null) {
-            try {
-                stmnt.cancel();
-                return true;
-            } catch (SQLException ex) {
-                this.lastError = ex;
-                return false;
-            }
-        }
-        return true;
+        if(stmnt != null)
+            stmnt.cancel();
 	}
 
 	@Override
@@ -216,10 +208,6 @@ public abstract class OraCommand implements SQLCommand {
 		return this.preparedStatement;
 	}
 
-	@Override
-	public Exception getLastError() {
-		return this.lastError;
-	}
 
     @Override
     public void setSqlWrapper(SQLWrapper sqlWrapper) {

@@ -98,5 +98,19 @@ public class StringUtl {
 				return str1.equals(str2);
 		}
 	}
-	
+
+    public static <T> String combineArray(T[] array, String delimiter) {
+        StringBuilder sb  = new StringBuilder();
+        for (T item : array)
+            sb.append(sb.length() == 0 ? item.toString() : delimiter+item.toString());
+        return sb.toString();
+    }
+
+    public static String combineArray(int[] array, String delimiter) {
+        StringBuilder sb  = new StringBuilder();
+        for (int item : array)
+            sb.append(sb.length() == 0 ? item : delimiter+item);
+        return sb.toString();
+    }
+
 }

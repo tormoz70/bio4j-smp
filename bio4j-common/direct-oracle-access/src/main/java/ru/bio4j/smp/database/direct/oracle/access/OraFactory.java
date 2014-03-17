@@ -1,7 +1,7 @@
-package bio4j.database.direct.oracle.access;
+package ru.bio4j.smp.database.direct.oracle.access;
 
-import bio4j.database.direct.oracle.access.impl.*;
 import ru.bio4j.smp.database.api.*;
+import ru.bio4j.smp.database.direct.oracle.access.impl.*;
 
 import java.sql.SQLException;
 

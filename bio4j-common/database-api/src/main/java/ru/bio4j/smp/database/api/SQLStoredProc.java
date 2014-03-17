@@ -3,6 +3,7 @@ package ru.bio4j.smp.database.api;
 import ru.bio4j.smp.common.types.Params;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,8 +13,8 @@ import java.sql.Connection;
  * To change this template use File | Settings | File Templates.
  */
 public interface SQLStoredProc extends SQLCommand {
-    boolean init(Connection conn, String storedProcName, Params params, int timeout);
-    boolean init(Connection conn, String storedProcName, Params params);
-    boolean execSQL(Params params);
-    boolean execSQL();
+    SQLStoredProc init(Connection conn, String storedProcName, Params params, int timeout) throws SQLException;
+    SQLStoredProc init(Connection conn, String storedProcName, Params params) throws SQLException;
+    void execSQL(Params params) throws SQLException;
+    void execSQL() throws SQLException;
 }
